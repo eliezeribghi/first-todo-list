@@ -1,0 +1,1 @@
+DELETE http://127.0.0.1:8000/api/tasks/4 HTTP/1.1

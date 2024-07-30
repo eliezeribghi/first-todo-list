@@ -1,0 +1,6 @@
+PUT http://127.0.0.1:8000/api/tasks/2 HTTP/1.1
+Content-Type: application/json
+
+{
+    "title": "Manger des frites"
+}
