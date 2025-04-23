@@ -1,42 +1,47 @@
-
 name: Laravel
 
 on:
   push:
-    branches:  github-action
-    tags:  'v*.*.*' 
+    branches: [ github-action ]
+    tags: [ 'v*.*.*' ] # Déclenche sur les tags Git comme v1.0.0
   pull_request:
-    branches:  main 
+    branches: [ github-action ]
 
 jobs:
   laravel-tests:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v4
-
-    - name: Build and tag Docker image
-      run: |
-        # Construire l'image avec docker-compose
-        docker-compose build backend
-        # Taguer avec le numéro de version (si tag Git)
-        if [[ "${{ github.ref }}" =~ ^refs/tags/v([0-9]+\.[0-9]+\.[0-9]+)$ ]]; then
-          docker tag backend:latest my-backend:${BASH_REMATCH[1]}
-        fi
-        # Taguer avec latest pour les push sur main
-        if [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
-          docker tag backend:latest my-backend:latest
-        fi
-        # Taguer avec le hash du commit
-        docker tag backend:latest my-backend:${{ github.sha }}
+    - name: Checkout code
+      uses: actions/checkout@v4
+    - name: Cache Composer dependencies
+      path: vendor
+      key: composer-${{ hashFiles('**/composer.lock') }}
+      restore-keys: composer-
     - name: Start Docker containers
-      run: docker-compose up -d
+      run: docker-compose up -d --build # --build pour s'assurer que l'image est construite
 
     - name: Install Dependencies
-      run: docker-compose exec -T backend_container php composer install
+      run: docker-compose exec -T backend_container composer install --no-ansi --no-interaction --optimize-autoloader
+
     - name: Generate key
       run: docker-compose exec -T backend_container php artisan key:generate
+
     - name: Run Tests
       run: docker-compose exec -T backend_container php artisan test
+
+    - name: Show Docker logs on failure
+      if: failure()
+      run: docker-compose logs
+
     - name: Stop Docker containers
       run: docker-compose down
+      if: always() # S'exécute même si une étape précédente échoue
+
+    - name: Notify on failure
+      if: failure()
+      uses: slackapi/slack-github-action@v1.27.0
+      with:
+      slack-bot-token: ${{ secrets.SLACK_BOT_TOKEN }}
+      channel-id: 'github'
+      text: 'Laravel CI failed for ${{ github.repository }} on ${{ github.ref }}' 
