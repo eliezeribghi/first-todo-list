@@ -205,10 +205,10 @@ button:active {
 .tasklist li .delete:active, .tasklist li .edit:active {
   transform: translateY(0.125rem);
 }
-.tasklist li .delete {
+.tasklist  .delete {
   background-image: url(../img/delete.png);
 }
-.tasklist li .edit {
+.tasklist .edit {
   background-image: url(../img/edit.png);
 }
 
@@ -291,7 +291,9 @@ form input[type=text]:focus {
 }
 @media (min-width: 768px) {
   .modal-dialog form {
-    width: 100%;
+    position: absolute;
+    transform: translate(50%, 20%);
+    width: 50%;
   }
 }
 

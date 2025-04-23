@@ -1,0 +1,70 @@
+
+
+services:
+  frontend:
+    build: ./frontend
+    container_name: frontend_container
+    restart: always
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend:/app
+    networks:
+      - front-network
+    depends_on:
+      - backend
+
+  backend:
+    build: ./backend
+      
+    container_name: backend_container
+    restart: always
+    ports:
+      - "8000:8000"
+    env_file:
+      - path: .env
+  
+    command:  php artisan serve --host=0.0.0.0 --port=8000
+    volumes:
+      - ./backend:/app
+    networks:
+      - db-network
+      - front-network
+    depends_on:
+      - mysql
+ 
+  adminer:
+    image: adminer
+    container_name: adminer
+    restart: always
+    env_file:
+      - path : .env
+    ports:
+      - 9080:9080
+    networks:
+      - db-network
+    environment:
+      - ADMINER_DEFAULT_SERVER=${ADMINER_DEFAULT_SERVER}
+      - ADMINER_DESIGN=pepa-linha-dark
+    depends_on:
+      - mysql
+  mysql:
+    image: mysql:9.2
+    container_name: mysql_db
+    ports:
+      - "3306:3306"
+    env_file:
+      - path : .env
+   
+    volumes:
+      - ./database/db.dump.sql:/docker-entrypoint-initdb.d/db.dump.sql
+      - db_data:/var/lib/mysql
+    networks:
+      - db-network
+
+volumes:
+  db_data:
+networks:
+  db-network:
+  front-network:
+  

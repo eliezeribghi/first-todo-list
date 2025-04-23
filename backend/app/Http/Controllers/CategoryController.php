@@ -10,23 +10,21 @@ class CategoryController extends Controller
 {
     public function list()
     {
-
-        $categories = Category::all();
-        return $categories;
+        return Category::all();
     }
 
     public function create(Request $request)
     {
         try {
 
-            $validated = $request->validate([
-                'title' => 'required|unique:categories'
+           $request->validate([
+                'title' => 'required|unique:categories',
             ]);
         } catch (ValidationException $error) {
             return $error;
         }
 
-        $category = new Category();
+        $category = new Category;
         $category->title = $request->input('title');
         $category->save();
 
@@ -37,8 +35,10 @@ class CategoryController extends Controller
     {
         $category = Category::findOrFail($id);
         $category->delete();
+
         return 'ok';
     }
+
     public function update(Request $request, $id)
     {
         $category = Category::findOrFail($id);
@@ -53,5 +53,4 @@ class CategoryController extends Controller
 
         return $category;
     }
-    
 }
