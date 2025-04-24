@@ -12,31 +12,25 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Cache Composer dependencies
-      uses: actions/cache@v3
-      with:
-       path: vendor
-       key: composer-${{ hashFiles('**/composer.lock') }}
-       restore-keys: composer-
 
     - name: Start Docker containers
       run: docker compose up -d --build # --build pour s'assurer que l'image est construite
 
     - name: Install Dependencies
-      run: docker-compose exec -T backend_container composer install --no-ansi --no-interaction --optimize-autoloader
+      run: docker compose exec -T backend_container composer install --no-ansi --no-interaction --optimize-autoloader
 
     - name: Generate key
-      run: docker-compose exec -T backend_container php artisan key:generate
+      run: docker compose exec -T backend_container php artisan key:generate
 
     - name: Run Tests
-      run: docker-compose exec -T backend_container php artisan test
+      run: docker compose exec -T backend_container php artisan test
 
     - name: Show Docker logs on failure
       if: failure()
-      run: docker-compose logs
+      run: docker compose logs
 
     - name: Stop Docker containers
-      run: docker-compose down
+      run: docker compose down
       if: always() # S'exécute même si une étape précédente échoue
 
     - name: Notify on failure
