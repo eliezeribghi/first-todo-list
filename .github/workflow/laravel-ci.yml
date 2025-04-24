@@ -2,10 +2,10 @@ name: Laravel
 
 on:
   push:
-    branches: [ github-action ]
-    tags: [ 'v*.*.*' ] # Déclenche sur les tags Git comme v1.0.0
+    branches:  github-action 
+    tags: [ 'v1.0.0' ] # Déclenche sur les tags Git comme v1.0.0
   pull_request:
-    branches: [ github-action ]
+    branches: github-action 
 
 jobs:
   laravel-tests:
