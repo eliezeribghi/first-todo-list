@@ -38,8 +38,6 @@ jobs:
     - name: Start Docker containers
       run: docker compose up -d --build
 
-    - name: Install Dependencies
-      run: docker compose exec -T backend_container composer install --no-ansi --no-interaction --optimize-autoloader
 
     - name: Generate key
       run: docker compose exec -T backend_container php artisan key:generate
