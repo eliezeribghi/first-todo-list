@@ -26,12 +26,12 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 # Copy project files
 COPY . .
 
-# Copy .env file (or use .env.example)
-COPY .env.example .env
-RUN php artisan key:generate
-
 # Install PHP dependencies
 RUN composer install --no-dev --optimize-autoloader
+
+# Copy .env file and generate application key
+COPY .env.example .env
+RUN php artisan key:generate
 
 # Create required Laravel folders and set permissions
 RUN mkdir -p storage/framework/sessions storage/framework/views storage/framework/cache bootstrap/cache \
