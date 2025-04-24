@@ -1,0 +1,48 @@
+name: Laravel
+
+on:
+  push:
+    branches: [ master, github-action ]
+    tags: [ 'v1.0.0' ]
+  pull_request:
+    branches: [ master, github-action ]
+
+jobs:
+  laravel-tests:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Cache Composer dependencies
+      uses: actions/cache@v3
+      with:
+       path: vendor
+       key: composer-${{ hashFiles('**/composer.lock') }}
+       restore-keys: composer-
+
+    - name: Start Docker containers
+      run: docker-compose up -d --build # --build pour s'assurer que l'image est construite
+
+    - name: Install Dependencies
+      run: docker-compose exec -T backend_container composer install --no-ansi --no-interaction --optimize-autoloader
+
+    - name: Generate key
+      run: docker-compose exec -T backend_container php artisan key:generate
+
+    - name: Run Tests
+      run: docker-compose exec -T backend_container php artisan test
+
+    - name: Show Docker logs on failure
+      if: failure()
+      run: docker-compose logs
+
+    - name: Stop Docker containers
+      run: docker-compose down
+      if: always() # S'exécute même si une étape précédente échoue
+
+    - name: Notify on failure
+      if: failure()
+      uses: slackapi/slack-github-action@v1.27.0
+      with:
+       slack-bot-token: ${{ secrets.SLACK_BOT_TOKEN }}
+       channel-id: 'github'
+       text: 'Laravel CI failed for ${{ github.repository }} on ${{ github.ref }}' 
