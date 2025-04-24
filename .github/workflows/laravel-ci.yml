@@ -19,7 +19,15 @@ jobs:
       run: |
         docker --version
         docker compose version
-
+    - name: Create .env file
+      run: |
+        echo "ADMINER_DEFAULT_SERVER=db" >> .env
+        echo "DB_HOST=db" >> .env
+        echo "DB_PORT=3306" >> .env
+        echo "DB_DATABASE=laravel" >> .env
+        echo "DB_USERNAME=root" >> .env
+        echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" >> .env
+        
     - name: Cache Composer dependencies
       uses: actions/cache@v3
       with:
