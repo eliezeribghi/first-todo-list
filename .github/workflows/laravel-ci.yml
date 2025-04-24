@@ -39,13 +39,13 @@ jobs:
       run: docker compose up -d --build
 
     - name: Install Dependencies
-      run: docker compose exec -T backend_container composer install --no-ansi --no-interaction --optimize-autoloader
+      run: docker compose exec -T backend composer install --no-ansi --no-interaction --optimize-autoloader
 
     - name: Generate key
-      run: docker compose exec -T backend_container php artisan key:generate
+      run: docker compose exec -T backend php artisan key:generate
 
     - name: Run Tests
-      run: docker compose exec -T backend_container php artisan test
+      run: docker compose exec -T backend php artisan test
 
     - name: Show Docker logs on failure
       if: failure()
