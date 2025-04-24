@@ -23,7 +23,7 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 COPY . .
 
 # Install PHP dependencies
-RUN composer install --no-ansi --no-interaction --optimize-autoloader
+RUN composer install 
 
 RUN php artisan key:generate
 # Create required Laravel folders and set permissions
