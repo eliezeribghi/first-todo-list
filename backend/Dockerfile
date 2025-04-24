@@ -10,27 +10,40 @@ RUN apt-get update && apt-get install -y \
     libonig-dev \
     libxml2-dev \
     zip \
-    unzip
+    unzip \
+    libzip-dev \
+    libicu-dev \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 
 # Install PHP extensions
-RUN docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd
-RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+RUN docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd zip intl
+RUN pecl install redis && docker-php-ext-enable redis
 
-COPY .env .env
-# Get Composer
+# Install Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
 # Copy project files
 COPY . .
 
-# Install PHP dependencies
-RUN composer install
+# Copy .env file (or use .env.example)
+COPY .env.example .env
+RUN php artisan key:generate
 
+# Install PHP dependencies
+RUN composer install --no-dev --optimize-autoloader
 
 # Create required Laravel folders and set permissions
 RUN mkdir -p storage/framework/sessions storage/framework/views storage/framework/cache bootstrap/cache \
     && chmod -R 775 storage bootstrap/cache \
     && chown -R www-data:www-data storage bootstrap/cache
+
+# Cache configuration and routes
+RUN php artisan config:cache \
+    && php artisan route:cache
+
+# Set user
+USER www-data
 
 # Expose port and start Laravel
 EXPOSE 8000
