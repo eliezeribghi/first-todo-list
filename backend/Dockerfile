@@ -23,8 +23,9 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 COPY . .
 
 # Install PHP dependencies
-RUN composer install
+RUN composer install --no-ansi --no-interaction --optimize-autoloader
 
+RUN php artisan key:generate
 # Create required Laravel folders and set permissions
 RUN mkdir -p storage/framework/sessions storage/framework/views storage/framework/cache bootstrap/cache \
     && chmod -R 775 storage bootstrap/cache \
