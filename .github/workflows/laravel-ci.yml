@@ -20,7 +20,7 @@ jobs:
        restore-keys: composer-
 
     - name: Start Docker containers
-      run: docker-compose up -d --build # --build pour s'assurer que l'image est construite
+      run: docker compose up -d --build # --build pour s'assurer que l'image est construite
 
     - name: Install Dependencies
       run: docker-compose exec -T backend_container composer install --no-ansi --no-interaction --optimize-autoloader
