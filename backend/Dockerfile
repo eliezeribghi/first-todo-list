@@ -15,7 +15,7 @@ RUN apt-get update && apt-get install -y \
 # Install PHP extensions
 RUN docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
-
+COPY .env .env
 # Get Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
@@ -23,9 +23,9 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 COPY . .
 
 # Install PHP dependencies
-RUN composer install 
+RUN composer install
 
-RUN php artisan key:generate
+
 # Create required Laravel folders and set permissions
 RUN mkdir -p storage/framework/sessions storage/framework/views storage/framework/cache bootstrap/cache \
     && chmod -R 775 storage bootstrap/cache \
