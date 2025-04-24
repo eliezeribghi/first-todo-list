@@ -11,23 +11,23 @@ class TagController extends Controller
     public function list()
     {
 
-        $tags = Tag::all();
+        return Tag::all();
 
-        return $tags;
+        
     }
 
     public function create(Request $request)
     {
         try {
 
-            $validated = $request->validate([
-                'name' => 'required|unique:tags'
+           $request->validate([
+                'name' => 'required|unique:tags',
             ]);
         } catch (ValidationException $error) {
             return $error;
         }
 
-        $tag = new Tag();
+        $tag = new Tag;
         $tag->name = $request->input('name');
         $tag->save();
 
@@ -38,8 +38,10 @@ class TagController extends Controller
     {
         $tag = Tag::findOrFail($id);
         $tag->delete();
+
         return 'ok';
     }
+
     public function update(Request $request, $id)
     {
         $tag = Tag::findOrFail($id);
@@ -47,4 +49,3 @@ class TagController extends Controller
         $tag->save();
     }
 }
-

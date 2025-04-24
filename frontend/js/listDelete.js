@@ -16,7 +16,7 @@ if(div.classList.contains('delete') ) {
 
 async function deleteElementFromApi(id) {
    
-    await fetch(apiConfig.endpoint + '/task/' + id,{ method: 'DELETE'});
+    await fetch(apiConfig.endpoint + '/tasks/' + id,{ method: 'DELETE'});
 
 }
 
