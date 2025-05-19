@@ -1,64 +1,93 @@
-name: Laravel
+name: Laravel CI
 
 on:
   push:
-    branches: [ master, github-action ]
-    tags: [ 'v1.0.0' ]
+    branches: [master, github-action]
+    tags: ['v*.*.*']
   pull_request:
-    branches: [ master, github-action ]
+    branches: [master, github-action]
 
 jobs:
   laravel-tests:
+    name: Run Laravel Tests in Docker
     runs-on: ubuntu-latest
 
+    env:
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_DATABASE: laravel
+      DB_USERNAME: root
+      DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+      - name: 🛎 Checkout repository
+        uses: actions/checkout@v4
 
-    - name: Verify Docker installation
-      run: |
-        docker --version
-        docker compose version
-    - name: Create .env file
-      run: |
-        echo "ADMINER_DEFAULT_SERVER=db" >> .env
-        echo "DB_HOST=db" >> .env
-        echo "DB_PORT=3306" >> .env
-        echo "DB_DATABASE=laravel" >> .env
-        echo "DB_USERNAME=root" >> .env
-        echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" >> .env
-        
-    - name: Cache Composer dependencies
-      uses: actions/cache@v3
-      with:
-        path: vendor
-        key: composer-${{ hashFiles('**/composer.lock') }}
-        restore-keys: composer-
+      - name: 🐳 Check Docker installation
+        run: |
+          docker --version
+          docker compose version
 
-    - name: Start Docker containers
-      run: docker compose up -d --build
+      - name: 📄 Create .env file
+        run: |
+          {
+            echo "ADMINER_DEFAULT_SERVER=${DB_HOST}"
+            echo "DB_HOST=${DB_HOST}"
+            echo "DB_PORT=${DB_PORT}"
+            echo "DB_DATABASE=${DB_DATABASE}"
+            echo "DB_USERNAME=${DB_USERNAME}"
+            echo "DB_PASSWORD=${DB_PASSWORD}"
+          } >> .env
 
-    # - name: Install Dependencies
-    #   run: docker compose exec -T backend composer install --no-ansi --no-interaction --optimize-autoloader
+      - name: 💾 Cache Composer dependencies
+        uses: actions/cache@v3
+        with:
+          path: vendor
+          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-composer-
 
-    - name: Generate key
-      run: docker compose exec -T backend php artisan key:generate
+      - name: 🚀 Build and start containers
+        run: docker compose up -d --build
 
-    - name: Run Tests
-      run: docker compose exec -T backend php artisan test
+      - name: 🔑 Generate application key
+        run: docker compose exec -T backend php artisan key:generate
 
-    - name: Show Docker logs on failure
-      if: failure()
-      run: docker compose logs
+      - name: ✅ Run PHPUnit tests
+        run: docker compose exec -T backend php artisan test
 
-    - name: Stop Docker containers
-      run: docker compose down
-      if: always()
+      - name: 📜 Show logs if tests fail
+        if: failure()
+        run: docker compose logs
 
-    - name: Notify on failure
-      if: failure()
-      uses: slackapi/slack-github-action@v1.27.0
-      with:
-        slack-bot-token: ${{ secrets.SLACK_BOT_TOKEN }}
-        channel-id: 'github'
-        text: 'Laravel CI failed for ${{ github.repository }} on ${{ github.ref }}'
+      - name: 🛑 Stop containers
+        if: always()
+        run: docker compose down --volumes
+
+      - name: 📢 Notify Slack on failure
+        if: failure()
+        uses: slackapi/slack-github-action@v1.27.0
+        with:
+          slack-bot-token: ${{ secrets.SLACK_BOT_TOKEN }}
+          channel-id: 'github'
+          text: |
+            ❌ Laravel CI failed for *${{ github.repository }}*
+            Ref: `${{ github.ref }}`
+            Author: `${
+            github.actor }`
+            Commit: `${{ github.sha }}`
+            URL: `<${{ github.event.repository.html_url }}/commit/${{ github.sha }}|View Commit>`
+            PR: `<${{ github.event.pull_request.html_url }}|View PR>`
+            Repository: `<${{ github.event.repository.html_url }}|${{ github.event.repository.name }}>`
+            Branch: `${{ github.ref }}`
+            Commit Message: `${{ github.event.head_commit.message }}`
+            Commit Author: `${{ github.event.head_commit.author.name }}`
+            Commit Author Email: `${{ github.event.head_commit.author.email }}`   
+
+    # - name: Notify on failure
+    #   if: failure()
+    #   uses: slackapi/slack-github-action@v1.27.0
+    #   with:
+    #     slack-bot-token: ${{ secrets.SLACK_BOT_TOKEN }}
+    #     channel-id: 'github'
+    #     text: 'Laravel CI failed for ${{ github.repository }} on ${{ github.ref }}'
