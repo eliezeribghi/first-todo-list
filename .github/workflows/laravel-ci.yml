@@ -13,11 +13,13 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      DB_HOST: db
+      DB_HOST: mysql
       DB_PORT: 3306
-      DB_DATABASE: laravel
-      DB_USERNAME: root
-      DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+      DB_DATABASE: todolist
+      DB_USERNAME: user_dbb
+      DB_PASSWORD: test
+      MYSQL_ROOT_PASSWORD: root
+      ADMINER_DEFAULT_SERVER: mysql
 
     steps:
       - name: 🛎 Checkout repository
@@ -32,23 +34,22 @@ jobs:
         run: |
           {
             echo "APP_NAME=Laravel"
-           echo "APP_ENV=local"
-           echo "APP_KEY="
+            echo "APP_ENV=local"
+            echo "APP_KEY="
             echo "APP_DEBUG=true"
-           echo "APP_URL=http://localhost:8000"
-           echo "DB_CONNECTION=mysql"
-           echo "DB_HOST=${DB_HOST}"
-           echo "DB_PORT=${DB_PORT}"
-           echo "DB_DATABASE=${DB_DATABASE}"
-           echo "DB_USERNAME=${DB_USERNAME}"
-           echo "DB_PASSWORD=${DB_PASSWORD}"
-           echo "MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}"
+            echo "APP_URL=http://localhost:8000"
+            echo "DB_CONNECTION=mysql"
+            echo "DB_HOST=${DB_HOST}"
+            echo "DB_PORT=${DB_PORT}"
+            echo "DB_DATABASE=${DB_DATABASE}"
+            echo "DB_USERNAME=${DB_USERNAME}"
+            echo "DB_PASSWORD=${DB_PASSWORD}"
+            echo "MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}"
             echo "MYSQL_DATABASE=${DB_DATABASE}"
-           echo "MYSQL_USER=${DB_USERNAME}"
-           echo "MYSQL_PASSWORD=${DB_PASSWORD}"
-           echo "ADMINER_DEFAULT_SERVER=${ADMINER_DEFAULT_SERVER}"
-           } > .env
-
+            echo "MYSQL_USER=${DB_USERNAME}"
+            echo "MYSQL_PASSWORD=${DB_PASSWORD}"
+            echo "ADMINER_DEFAULT_SERVER=${ADMINER_DEFAULT_SERVER}"
+          } > .env
 
       - name: 💾 Cache Composer dependencies
         uses: actions/cache@v3
@@ -60,21 +61,21 @@ jobs:
 
       - name: 🚀 Build and start containers
         run: docker compose up -d --build
+
       - name: ⏳ Wait for DB to be ready
         run: |
           for i in {1..30}; do
-           docker compose exec -T backend php -r "
-           try {
-             new PDO('mysql:host=mysql;port=3306;dbname=todolist', 'user_dbb', 'test');
-             exit(0);
-             } catch (Exception \$e) {
-             exit(1);
-           }
-           " && break
-           echo 'Waiting for DB...'
-          sleep 2
+            docker compose exec -T backend php -r "
+              try {
+                new PDO('mysql:host=mysql;port=3306;dbname=todolist', 'user_dbb', 'test');
+                exit(0);
+              } catch (Exception \$e) {
+                exit(1);
+              }
+            " && break
+            echo 'Waiting for DB...'
+            sleep 2
           done
-
 
       - name: 🔑 Generate application key
         run: docker compose exec -T backend php artisan key:generate
@@ -99,8 +100,7 @@ jobs:
           text: |
             ❌ Laravel CI failed for *${{ github.repository }}*
             Ref: `${{ github.ref }}`
-            Author: `${
-            github.actor }`
+            Author: `${{ github.actor }}`
             Commit: `${{ github.sha }}`
             URL: `<${{ github.event.repository.html_url }}/commit/${{ github.sha }}|View Commit>`
             PR: `<${{ github.event.pull_request.html_url }}|View PR>`
@@ -108,7 +108,8 @@ jobs:
             Branch: `${{ github.ref }}`
             Commit Message: `${{ github.event.head_commit.message }}`
             Commit Author: `${{ github.event.head_commit.author.name }}`
-            Commit Author Email: `${{ github.event.head_commit.author.email }}`   
+            Commit Author Email: `${{ github.event.head_commit.author.email }}`
+
 
     # - name: Notify on failure
     #   if: failure()
