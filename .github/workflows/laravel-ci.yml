@@ -49,6 +49,20 @@ jobs:
 
       - name: 🚀 Build and start containers
         run: docker compose up -d --build
+      - name: ⏳ Wait for DB to be ready
+        run: |
+         for i in {1..30}; do
+         docker compose exec -T backend php -r "
+          try {
+          new PDO('mysql:host=db;port=3306;dbname=laravel', 'root', '${{ secrets.DB_PASSWORD }}');
+          exit(0);
+          } catch (Exception \$e) {
+          exit(1);
+           }
+          " && break
+          echo 'Waiting for DB...'
+         sleep 2
+         done
 
       - name: 🔑 Generate application key
         run: docker compose exec -T backend php artisan key:generate
