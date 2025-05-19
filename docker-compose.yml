@@ -22,12 +22,13 @@ services:
     ports:
       - "8000:8000"
     env_file:
-      - path: .env
+      - .env
   
     command:  php artisan serve --host=0.0.0.0 --port=8000
     volumes:
       - ./backend:/app
-    
+      - ./.env:/app/.env
+
     networks:
       - db-network
       - front-network
@@ -39,7 +40,7 @@ services:
     container_name: adminer
     restart: always
     env_file:
-      - path : .env
+      - .env
     ports:
       - 9080:9080
     networks:
@@ -50,12 +51,12 @@ services:
     depends_on:
       - mysql
   mysql:
-    image: mysql:9.2
+    image: mysql:8.4
     container_name: mysql_db
     ports:
       - "3306:3306"
     env_file:
-      - path : .env
+      - .env
     environment:
       - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
       - MYSQL_DATABASE=${DB_NAME}
