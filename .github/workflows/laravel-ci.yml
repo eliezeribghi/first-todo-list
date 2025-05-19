@@ -1,6 +1,19 @@
 name: Laravel CI
 
 on:
+  workflow_dispatch:
+    inputs:
+      environnement:
+        description: 'Choisir l’environnement'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+          - staging
+          - production
+      version:
+        description: 'Version à déployer'
+        required: false
   push:
     branches: [master, github-action]
     tags: ['v*.*.*']
@@ -26,6 +39,11 @@ jobs:
 
 
     steps:
+      - name: Afficher les paramètres de déploiement
+        run: |  
+         echo "Déploiement sur ${{ github.event.inputs.environnement }}"
+         echo "Version : ${{ github.event.inputs.version }}"
+
       - name: 🛎 Checkout repository
         uses: actions/checkout@v4
 
@@ -85,8 +103,8 @@ jobs:
       - name: 📝 Afficher les logs MySQL
         run: docker compose logs mysql
 
-      - name: 🔑 Generate application key
-        run: docker compose exec -T backend php artisan key:generate
+      # - name: 🔑 Generate application key
+      #   run: docker compose exec -T backend php artisan key:generate
 
       - name: ✅ Run PHPUnit tests
         run: docker compose exec -T backend php artisan test
