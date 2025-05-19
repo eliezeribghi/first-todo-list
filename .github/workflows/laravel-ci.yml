@@ -44,6 +44,7 @@ jobs:
             echo "DB_PORT=${DB_PORT}"
             echo "DB_DATABASE=${DB_DATABASE}"
             echo "DB_USERNAME=${DB_USERNAME}"
+            echo "DB_NAME=${DB_NAME}" 
             echo "DB_PASSWORD=${DB_PASSWORD}"
             echo "MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}"
             echo "MYSQL_DATABASE=${DB_DATABASE}"
