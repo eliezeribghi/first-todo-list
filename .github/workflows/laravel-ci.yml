@@ -47,6 +47,9 @@ jobs:
       - name: 🛎 Checkout repository
         uses: actions/checkout@v4
 
+      - name: 📦 Install Composer dependencies
+        run: docker compose exec -T backend composer install
+
       - name: 🐳 Check Docker installation
         run: |
           docker --version
@@ -103,11 +106,14 @@ jobs:
       - name: 📝 Afficher les logs MySQL
         run: docker compose logs mysql
 
-      # - name: 🔑 Generate application key
-      #   run: docker compose exec -T backend php artisan key:generate
+      - name: 🔑 Generate application key
+        run: docker compose exec -T backend php artisan key:generate
 
       - name: ✅ Run PHPUnit tests
         run: docker compose exec -T backend php artisan test
+
+      - name: 🔄 Run migrations
+        run: docker compose exec -T backend php artisan migrate --force
 
       - name: 📜 Show logs if tests fail
         if: failure()
