@@ -31,13 +31,24 @@ jobs:
       - name: 📄 Create .env file
         run: |
           {
-            echo "ADMINER_DEFAULT_SERVER=${DB_HOST}"
-            echo "DB_HOST=${DB_HOST}"
-            echo "DB_PORT=${DB_PORT}"
-            echo "DB_DATABASE=${DB_DATABASE}"
-            echo "DB_USERNAME=${DB_USERNAME}"
-            echo "DB_PASSWORD=${DB_PASSWORD}"
-          } >> .env
+            echo "APP_NAME=Laravel"
+           echo "APP_ENV=local"
+           echo "APP_KEY="
+            echo "APP_DEBUG=true"
+           echo "APP_URL=http://localhost:8000"
+           echo "DB_CONNECTION=mysql"
+           echo "DB_HOST=${DB_HOST}"
+           echo "DB_PORT=${DB_PORT}"
+           echo "DB_DATABASE=${DB_DATABASE}"
+           echo "DB_USERNAME=${DB_USERNAME}"
+           echo "DB_PASSWORD=${DB_PASSWORD}"
+           echo "MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}"
+            echo "MYSQL_DATABASE=${DB_DATABASE}"
+           echo "MYSQL_USER=${DB_USERNAME}"
+           echo "MYSQL_PASSWORD=${DB_PASSWORD}"
+           echo "ADMINER_DEFAULT_SERVER=${ADMINER_DEFAULT_SERVER}"
+           } > .env
+
 
       - name: 💾 Cache Composer dependencies
         uses: actions/cache@v3
@@ -51,18 +62,19 @@ jobs:
         run: docker compose up -d --build
       - name: ⏳ Wait for DB to be ready
         run: |
-         for i in {1..30}; do
-         docker compose exec -T backend php -r "
-          try {
-          new PDO('mysql:host=db;port=3306;dbname=laravel', 'root', '${{ secrets.DB_PASSWORD }}');
-          exit(0);
-          } catch (Exception \$e) {
-          exit(1);
+          for i in {1..30}; do
+           docker compose exec -T backend php -r "
+           try {
+             new PDO('mysql:host=mysql;port=3306;dbname=todolist', 'user_dbb', 'test');
+             exit(0);
+             } catch (Exception \$e) {
+             exit(1);
            }
-          " && break
-          echo 'Waiting for DB...'
-         sleep 2
-         done
+           " && break
+           echo 'Waiting for DB...'
+          sleep 2
+          done
+
 
       - name: 🔑 Generate application key
         run: docker compose exec -T backend php artisan key:generate
