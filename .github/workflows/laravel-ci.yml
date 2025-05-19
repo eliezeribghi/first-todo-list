@@ -16,6 +16,7 @@ jobs:
       DB_HOST: mysql
       DB_PORT: 3306
       DB_DATABASE: todolist
+      DB_NAME: todolist  
       DB_USERNAME: user_dbb
       DB_PASSWORD: test
       MYSQL_ROOT_PASSWORD: root
