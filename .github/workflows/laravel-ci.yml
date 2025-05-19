@@ -13,16 +13,16 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-     DB_HOST: mysql
-     DB_PORT: 3306
-     DB_DATABASE: todolist
-     DB_USERNAME: user_dbb
-     DB_PASSWORD: test
-     MYSQL_ROOT_PASSWORD: root
-     MYSQL_DATABASE: todolist
-     MYSQL_USER: user_dbb
-     MYSQL_PASSWORD: test
-     ADMINER_DEFAULT_SERVER: mysql
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_DATABASE: todolist
+      DB_USERNAME: user_dbb
+      DB_PASSWORD: test
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: todolist
+      MYSQL_USER: user_dbb
+      MYSQL_PASSWORD: test
+      ADMINER_DEFAULT_SERVER: mysql
 
 
     steps:
@@ -54,6 +54,7 @@ jobs:
             echo "MYSQL_PASSWORD=${MYSQL_PASSWORD}"
             echo "ADMINER_DEFAULT_SERVER=${ADMINER_DEFAULT_SERVER}"
           } > .env
+
 
 
       - name: 💾 Cache Composer dependencies
