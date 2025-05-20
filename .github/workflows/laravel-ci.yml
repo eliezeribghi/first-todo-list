@@ -24,7 +24,7 @@ jobs:
   laravel-tests:
     name: Run Laravel Tests in Docker
     runs-on: ubuntu-latest
-    environment: firsttodo-list # Environnement pour accéder aux secrets
+    environment: firsttodo-list
 
     env:
       DB_HOST: mysql
@@ -104,14 +104,21 @@ jobs:
             echo "MAIL_FROM_ADDRESS=null"
             echo "MAIL_FROM_NAME=\"Laravel\""
           } > .env
-          cat .env # Pour débogage
-
-      - name: 🔍 Debug environment variables
-        run: |
-          echo "DB_PASSWORD is set to: ${{ secrets.DB_PASSWORD || 'NOT_SET' }}"
-          echo "MYSQL_ROOT_PASSWORD is set to: ${{ secrets.MYSQL_ROOT_PASSWORD || 'NOT_SET' }}"
-          echo "MYSQL_PASSWORD is set to: ${{ secrets.MYSQL_PASSWORD || 'NOT_SET' }}"
           cat .env
+
+      - name: 🔍 Check system memory
+        run: |
+          echo "Available memory before starting containers:"
+          free -m
+          docker stats --no-stream
+
+      - name: 💾 Cache Composer dependencies
+        uses: actions/cache@v3
+        with:
+          path: backend/vendor
+          key: ${{ runner.os }}-composer-${{ hashFiles('backend/composer.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-composer-
 
       - name: 🚀 Build and start MySQL only
         run: |
@@ -145,15 +152,15 @@ jobs:
             exit 1
           fi
 
-      - name: 🚀 Start remaining containers
+      - name: 🚀 Start backend container only
         run: |
-          echo "Starting remaining containers..."
-          docker-compose up -d --build
+          echo "Starting backend container..."
+          docker-compose up -d --build backend
           echo "Listing containers..."
           docker-compose ps
 
-      - name: 📝 Show backend logs if startup fails
-        if: failure()
+      - name: 📝 Show backend logs immediately
+        if: always()
         run: docker-compose logs backend
 
       - name: 📦 Install Composer dependencies
@@ -162,7 +169,10 @@ jobs:
           for i in {1..30}; do
             if docker ps --filter "name=backend_container" --filter "status=running" -q; then
               echo "Backend is running!"
-              docker-compose exec -T backend composer install --no-dev --optimize-autoloader
+              echo "Available memory before composer install:"
+              free -m
+              # Optimiser la mémoire et utiliser des options légères
+              docker-compose exec -T backend bash -c "export COMPOSER_MEMORY_LIMIT=-1 && composer install --no-dev --no-plugins --prefer-dist --optimize-autoloader"
               break
             fi
             echo "Waiting for backend... ($i/30)"
@@ -174,6 +184,13 @@ jobs:
             docker-compose logs backend
             exit 1
           fi
+
+      - name: 🚀 Start remaining containers
+        run: |
+          echo "Starting remaining containers..."
+          docker-compose up -d --build
+          echo "Listing containers..."
+          docker-compose ps
 
       - name: 🔑 Generate application key
         run: docker-compose exec -T backend php artisan key:generate
@@ -195,16 +212,16 @@ jobs:
       - name: 📢 Notify Slack on failure
         if: failure() && github.event_name != 'workflow_dispatch' && env.SLACK_BOT_TOKEN != ''
         uses: slackapi/slack-github-action@v1.27.0
+        env:
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
         with:
-          slack-bot-token: ${{ secrets.SLACK_BOT_TOKEN }}
-          channel-id: 'github'
-          text: |
+          channel-id: github
+          slack-message: |
             ❌ Laravel CI failed for *${{ github.repository }}*
             Ref: `${{ github.ref }}`
             Author: `${{ github.actor }}`
             Commit: `${{ github.sha }}`
             URL: `<${{ github.event.repository.html_url }}/commit/${{ github.sha }}|View Commit>`
-            ${{ github.event.pull_request.html_url && format('PR: <{0}|View PR>', github.event.pull_request.html_url) || '' }}
             Repository: `<${{ github.event.repository.html_url }}|${{ github.event.repository.name }}>`
             Branch: `${{ github.ref }}`
             Commit Message: `${{ github.event.head_commit.message || 'N/A' }}`
