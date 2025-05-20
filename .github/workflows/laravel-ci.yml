@@ -30,7 +30,12 @@ jobs:
       DB_PORT: 3306
       DB_DATABASE: todolist
       DB_USERNAME: user_dbb
-      DB_PASSWORD: test
+      DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+      MYSQL_ROOT_PASSWORD: ${{ secrets.MYSQL_ROOT_PASSWORD }}
+      MYSQL_DATABASE: todolist
+      MYSQL_USER: user_dbb
+      MYSQL_PASSWORD: ${{ secrets.MYSQL_PASSWORD }}
+      ADMINER_DEFAULT_SERVER: mysql
 
     steps:
       - name: Afficher les paramètres de déploiement
@@ -50,6 +55,9 @@ jobs:
           chmod +x /usr/local/bin/docker-compose
           docker-compose --version
 
+      - name: 📄 Display docker-compose.yml
+        run: cat docker-compose.yml
+
       - name: 📄 Create .env file
         run: |
           {
@@ -64,7 +72,19 @@ jobs:
             echo "DB_DATABASE=${{ env.DB_DATABASE }}"
             echo "DB_USERNAME=${{ env.DB_USERNAME }}"
             echo "DB_PASSWORD=${{ env.DB_PASSWORD }}"
+            echo "MYSQL_ROOT_PASSWORD=${{ env.MYSQL_ROOT_PASSWORD }}"
+            echo "MYSQL_DATABASE=${{ env.MYSQL_DATABASE }}"
+            echo "MYSQL_USER=${{ env.MYSQL_USER }}"
+            echo "MYSQL_PASSWORD=${{ env.MYSQL_PASSWORD }}"
+            echo "ADMINER_DEFAULT_SERVER=${{ env.ADMINER_DEFAULT_SERVER }}"
+            echo "BROADCAST_DRIVER=log"
+            echo "CACHE_DRIVER=file"
+            echo "FILESYSTEM_DRIVER=local"
+            echo "QUEUE_CONNECTION=sync"
+            echo "SESSION_DRIVER=file"
+            echo "SESSION_LIFETIME=120"
           } > .env
+          cat .env # Pour débogage
 
       - name: 💾 Cache Composer dependencies
         uses: actions/cache@v3
@@ -75,18 +95,32 @@ jobs:
             ${{ runner.os }}-composer-
 
       - name: 🚀 Build and start containers
-        run: docker-compose up -d --build
+        run: |
+          echo "Starting Docker Compose..."
+          docker-compose up -d --build
+          echo "Docker Compose started, listing containers..."
+          docker-compose ps
 
       - name: ⏳ Wait for DB to be ready
         run: |
           for i in {1..30}; do
             docker-compose exec -T mysql mysqladmin ping -h mysql -u ${{ env.DB_USERNAME }} -p${{ env.DB_PASSWORD }} --silent && break
-            echo 'Waiting for DB...'
+            echo "Waiting for DB..."
+            docker-compose ps
             sleep 2
           done
+          if ! docker-compose exec -T mysql mysqladmin ping -h mysql -u ${{ env.DB_USERNAME }} -p${{ env.DB_PASSWORD }} --silent; then
+            echo "Database failed to start"
+            docker-compose logs mysql
+            exit 1
+          fi
+
+      - name: 📝 Show MySQL logs if DB is not ready
+        if: failure()
+        run: docker-compose logs mysql
 
       - name: 📦 Install Composer dependencies
-        run: docker-compose exec -T backend composer install
+        run: docker-compose exec -T backend composer install --no-dev --optimize-autoloader
 
       - name: 🔑 Generate application key
         run: docker-compose exec -T backend php artisan key:generate
@@ -105,21 +139,21 @@ jobs:
         if: always()
         run: docker-compose down --volumes --remove-orphans
 
-      # - name: 📢 Notify Slack on failure
-      #   if: failure() && github.event_name != 'workflow_dispatch' && secrets.SLACK_BOT_TOKEN
-      #   uses: slackapi/slack-github-action@v1.27.0
-      #   with:
-      #     slack-bot-token: ${{ secrets.SLACK_BOT_TOKEN }}
-      #     channel-id: 'github'
-      #     text: |
-      #       ❌ Laravel CI failed for *${{ github.repository }}*
-      #       Ref: `${{ github.ref }}`
-      #       Author: `${{ github.actor }}`
-      #       Commit: `${{ github.sha }}`
-      #       URL: `<${{ github.event.repository.html_url }}/commit/${{ github.sha }}|View Commit>`
-      #       ${{ github.event.pull_request.html_url && format('PR: <{0}|View PR>', github.event.pull_request.html_url) || '' }}
-      #       Repository: `<${{ github.event.repository.html_url }}|${{ github.event.repository.name }}>`
-      #       Branch: `${{ github.ref }}`
-      #       Commit Message: `${{ github.event.head_commit.message || 'N/A' }}`
-      #       Commit Author: `${{ github.event.head_commit.author.name || github.actor }}`
-      #       Commit Author Email: `${{ github.event.head_commit.author.email || 'N/A' }}`
+      - name: 📢 Notify Slack on failure
+        if: failure() && github.event_name != 'workflow_dispatch' && secrets.SLACK_BOT_TOKEN
+        uses: slackapi/slack-github-action@v1.27.0
+        with:
+          slack-bot-token: ${{ secrets.SLACK_BOT_TOKEN }}
+          channel-id: 'github'
+          text: |
+            ❌ Laravel CI failed for *${{ github.repository }}*
+            Ref: `${{ github.ref }}`
+            Author: `${{ github.actor }}`
+            Commit: `${{ github.sha }}`
+            URL: `<${{ github.event.repository.html_url }}/commit/${{ github.sha }}|View Commit>`
+            ${{ github.event.pull_request.html_url && format('PR: <{0}|View PR>', github.event.pull_request.html_url) || '' }}
+            Repository: `<${{ github.event.repository.html_url }}|${{ github.event.repository.name }}>`
+            Branch: `${{ github.ref }}`
+            Commit Message: `${{ github.event.head_commit.message || 'N/A' }}`
+            Commit Author: `${{ github.event.head_commit.author.name || github.actor }}`
+            Commit Author Email: `${{ github.event.head_commit.author.email || 'N/A' }}`
