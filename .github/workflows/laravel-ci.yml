@@ -87,7 +87,7 @@ jobs:
             echo "MAIL_FROM_ADDRESS=null"
             echo "MAIL_FROM_NAME=\"Laravel\""
           } > .env
-           cp .env backend/app/.env
+           cp .env backend/.env
            
       - name: 🔍 Vérifier que `.env` est bien présent dans le backend
         run: docker-compose exec -T backend ls -l /app/.env
