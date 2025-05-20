@@ -35,6 +35,7 @@ jobs:
       MYSQL_DATABASE: todolist
       MYSQL_USER: user_dbb
       MYSQL_PASSWORD: ${{ secrets.MYSQL_PASSWORD }}
+      SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
       ADMINER_DEFAULT_SERVER: mysql
 
     steps:
