@@ -105,21 +105,21 @@ jobs:
         if: always()
         run: docker-compose down --volumes --remove-orphans
 
-      - name: 📢 Notify Slack on failure
-        if: failure() && github.event_name != 'workflow_dispatch' && secrets.SLACK_BOT_TOKEN
-        uses: slackapi/slack-github-action@v1.27.0
-        with:
-          slack-bot-token: ${{ secrets.SLACK_BOT_TOKEN }}
-          channel-id: 'github'
-          text: |
-            ❌ Laravel CI failed for *${{ github.repository }}*
-            Ref: `${{ github.ref }}`
-            Author: `${{ github.actor }}`
-            Commit: `${{ github.sha }}`
-            URL: `<${{ github.event.repository.html_url }}/commit/${{ github.sha }}|View Commit>`
-            ${{ github.event.pull_request.html_url && format('PR: <{0}|View PR>', github.event.pull_request.html_url) || '' }}
-            Repository: `<${{ github.event.repository.html_url }}|${{ github.event.repository.name }}>`
-            Branch: `${{ github.ref }}`
-            Commit Message: `${{ github.event.head_commit.message || 'N/A' }}`
-            Commit Author: `${{ github.event.head_commit.author.name || github.actor }}`
-            Commit Author Email: `${{ github.event.head_commit.author.email || 'N/A' }}`
+      # - name: 📢 Notify Slack on failure
+      #   if: failure() && github.event_name != 'workflow_dispatch' && secrets.SLACK_BOT_TOKEN
+      #   uses: slackapi/slack-github-action@v1.27.0
+      #   with:
+      #     slack-bot-token: ${{ secrets.SLACK_BOT_TOKEN }}
+      #     channel-id: 'github'
+      #     text: |
+      #       ❌ Laravel CI failed for *${{ github.repository }}*
+      #       Ref: `${{ github.ref }}`
+      #       Author: `${{ github.actor }}`
+      #       Commit: `${{ github.sha }}`
+      #       URL: `<${{ github.event.repository.html_url }}/commit/${{ github.sha }}|View Commit>`
+      #       ${{ github.event.pull_request.html_url && format('PR: <{0}|View PR>', github.event.pull_request.html_url) || '' }}
+      #       Repository: `<${{ github.event.repository.html_url }}|${{ github.event.repository.name }}>`
+      #       Branch: `${{ github.ref }}`
+      #       Commit Message: `${{ github.event.head_commit.message || 'N/A' }}`
+      #       Commit Author: `${{ github.event.head_commit.author.name || github.actor }}`
+      #       Commit Author Email: `${{ github.event.head_commit.author.email || 'N/A' }}`
