@@ -49,10 +49,9 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y docker-compose
-      - name: 🐳 Démarrer les conteneurs Docker
-        run: |
-          docker-compose up -d
-          sleep 30
+
+     
+
       - name: 🧾 Générer le fichier .env
         run: |
           {
@@ -90,9 +89,27 @@ jobs:
             echo "MAIL_FROM_ADDRESS=null"
             echo "MAIL_FROM_NAME=\"Laravel\""
           } > .env
-           cp .env backend/.env
-           
+           mkdir -p backend
+            cp .env backend/.env
+            ls -l backend/ # Vérifier que backend/.env existe
+            cat backend/.env # Afficher le contenu pour débogage
+      - name: 🐳 Démarrer les conteneurs Docker
+        run: |
+          docker-compose up -d
+          sleep 30     
       
+      - name: 📜 Vérifier les logs du conteneur backend
+        run: docker-compose logs backend
+
+      - name: 🔎 Vérifier l’état du conteneur backend
+        run: |
+          if docker-compose ps backend | grep "Up"; then
+            echo "✅ Backend container is running"
+          else
+            echo "❌ Backend container is not running"
+            docker-compose ps
+            exit 1
+          fi
 
       
 

@@ -25,6 +25,7 @@ services:
     env_file:
       - .env
     volumes:
+      - ./backend/.env:/app/.env
       - ./backend:/app
     networks:
       - db-network
