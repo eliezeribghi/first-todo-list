@@ -160,19 +160,32 @@ jobs:
           echo "Building backend image..."
           docker-compose build --no-cache backend
           echo "Backend image built."
+          echo "Listing built images..."
+          docker images | grep backend
 
       - name: 📦 Install Composer dependencies in temporary container
         run: |
           echo "Installing Composer dependencies in temporary container..."
-          BACKEND_IMAGE=$(docker-compose config | grep "image:.*backend" | awk '{print $2}' | head -n 1)
+          BACKEND_IMAGE=$(docker-compose config | yq e '.services.backend.image // ""' -)
+          if [ -z "$BACKEND_IMAGE" ]; then
+            echo "No explicit image defined, using default build image..."
+            BACKEND_IMAGE=$(docker images | grep "$(docker-compose config | grep 'build:.*backend' | awk '{print $1}' | head -n 1)" | awk '{print $1}' | head -n 1)
+          fi
           echo "Using backend image: $BACKEND_IMAGE"
+          if [ -z "$BACKEND_IMAGE" ]; then
+            echo "Error: Could not determine backend image"
+            exit 1
+          fi
           docker run --rm -v $(pwd)/backend:/app $BACKEND_IMAGE bash -c "cd /app && composer --version && export COMPOSER_MEMORY_LIMIT=-1 && composer install --no-dev --no-plugins --prefer-dist --optimize-autoloader"
           echo "Composer dependencies installed."
 
       - name: 📝 Setup Laravel storage and cache directories
         run: |
           echo "Setting up Laravel storage and cache directories..."
-          BACKEND_IMAGE=$(docker-compose config | grep "image:.*backend" | awk '{print $2}' | head -n 1)
+          BACKEND_IMAGE=$(docker-compose config | yq e '.services.backend.image // ""' -)
+          if [ -z "$BACKEND_IMAGE" ]; then
+            BACKEND_IMAGE=$(docker images | grep "$(docker-compose config | grep 'build:.*backend' | awk '{print $1}' | head -n 1)" | awk '{print $1}' | head -n 1)
+          fi
           docker run --rm -v $(pwd)/backend:/app $BACKEND_IMAGE bash -c "cd /app && mkdir -p storage/framework/sessions storage/framework/views storage/framework/cache bootstrap/cache && chmod -R 775 storage bootstrap/cache && chown -R www-data:www-data storage bootstrap/cache || true"
           echo "Directories set up."
 
@@ -240,7 +253,7 @@ jobs:
         env:
           SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
         with:
-          channel-id: C12345678 # Remplacer par l'ID correct du canal Slack
+          channel-id: github # Remplacer par l'ID correct du canal Slack
           slack-message: |
             ❌ Laravel CI failed for *${{ github.repository }}*
             Ref: `${{ github.ref }}`
