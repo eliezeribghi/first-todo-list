@@ -49,17 +49,21 @@ jobs:
       - name: 🛎 Checkout repository
         uses: actions/checkout@v4
   
-      - name: 📝 Adjust backend directory permissions
-        run: chmod -R u+w backend
+      # - name: 📝 Adjust backend directory permissions
+      #   run: chmod -R u+w backend
 
-      - name: 🐳 Setup Docker Compose
+      # - name: 🐳 Setup Docker Compose
+      #   run: |
+      #     echo "Installing Docker Compose..."
+      #     sudo rm -f /usr/local/bin/docker-compose
+      #     curl -L "https://github.com/docker/compose/releases/download/v2.29.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+      #     chmod +x /usr/local/bin/docker-compose
+      #     docker-compose --version
+
+      - name: Installer Docker Compose
         run: |
-          echo "Installing Docker Compose..."
-          sudo rm -f /usr/local/bin/docker-compose
-          curl -L "https://github.com/docker/compose/releases/download/v2.29.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-          chmod +x /usr/local/bin/docker-compose
-          docker-compose --version
-
+         sudo apt-get update
+         sudo apt-get install -y docker-compose
 
       - name: Démarrer les conteneurs Docker
         run: docker-compose up -d
