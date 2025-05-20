@@ -49,6 +49,9 @@ jobs:
       - name: 🛎 Checkout repository
         uses: actions/checkout@v4
 
+      - name: 📝 Adjust backend directory permissions
+        run: chmod -R u+w backend
+
       - name: 🐳 Setup Docker Compose
         run: |
           echo "Installing Docker Compose..."
@@ -166,6 +169,13 @@ jobs:
           docker run --rm -v $(pwd)/backend:/app $BACKEND_IMAGE bash -c "cd /app && composer --version && export COMPOSER_MEMORY_LIMIT=-1 && composer install --no-dev --no-plugins --prefer-dist --optimize-autoloader"
           echo "Composer dependencies installed."
 
+      - name: 📝 Setup Laravel storage and cache directories
+        run: |
+          echo "Setting up Laravel storage and cache directories..."
+          BACKEND_IMAGE=$(docker-compose config | grep "image:.*backend" | awk '{print $2}' | head -n 1)
+          docker run --rm -v $(pwd)/backend:/app $BACKEND_IMAGE bash -c "cd /app && mkdir -p storage/framework/sessions storage/framework/views storage/framework/cache bootstrap/cache && chmod -R 775 storage bootstrap/cache && chown -R www-data:www-data storage bootstrap/cache || true"
+          echo "Directories set up."
+
       - name: 🚀 Start backend container only
         run: |
           echo "Starting backend container..."
@@ -195,6 +205,14 @@ jobs:
             exit 1
           fi
 
+      - name: 🔑 Generate application key
+        run: docker-compose exec -T backend php artisan key:generate
+
+      - name: 🔄 Cache configuration and routes
+        run: |
+          docker-compose exec -T backend php artisan config:cache
+          docker-compose exec -T backend php artisan route:cache
+
       - name: 🔄 Run migrations
         run: docker-compose exec -T backend php artisan migrate --force
 
@@ -204,9 +222,6 @@ jobs:
           docker-compose up -d --build
           echo "Listing containers..."
           docker-compose ps
-
-      - name: 🔑 Generate application key
-        run: docker-compose exec -T backend php artisan key:generate
 
       - name: ✅ Run PHPUnit tests
         run: docker-compose exec -T backend php artisan test
@@ -236,4 +251,4 @@ jobs:
             Branch: `${{ github.ref }}`
             Commit Message: `${{ github.event.head_commit.message || 'N/A' }}`
             Commit Author: `${{ github.event.head_commit.author.name || github.actor }}`
-            Commit Author Email: `${{ github.event.head_commit.author.email || 'N/A' }}`
+            Commit Author Email: ${{ github.event.head_commit.author.email || 'N/A' }}`
