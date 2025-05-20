@@ -89,12 +89,15 @@ jobs:
           } > .env
            cp .env backend/.env
            
-      - name: 🔍 Vérifier que `.env` est bien présent dans le backend
-        run: docker-compose exec -T backend ls -l /app/.env
+      
 
       - name: 🐳 Démarrer les conteneurs Docker
-        run: docker-compose up -d
+        run: |
+          docker-compose up -d
+          sleep 5
 
+      - name: 🔍 Vérifier que `.env` est bien présent dans le backend
+        run: docker-compose exec -T backend ls -l /app/.env
       - name: ⏳ Attendre que MySQL soit prêt
         run: |
           echo "⏳ Waiting for MySQL to be ready..."
