@@ -26,25 +26,10 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 # Copy project files
 COPY . .
 
-# Install PHP dependencies
-RUN composer install --no-dev --optimize-autoloader
+# Set permissions
+RUN chown -R www-data:www-data /app/storage /app/bootstrap/cache
+RUN chmod -R 775 /app/storage /app/bootstrap/cache
 
-# Copy .env file and generate application key
-COPY .env.example .env
-RUN php artisan key:generate
-
-# Create required Laravel folders and set permissions
-RUN mkdir -p storage/framework/sessions storage/framework/views storage/framework/cache bootstrap/cache \
-    && chmod -R 775 storage bootstrap/cache \
-    && chown -R www-data:www-data storage bootstrap/cache
-
-# Cache configuration and routes
-RUN php artisan config:cache \
-    && php artisan route:cache
-
-# Set user
-USER www-data
-
-# Expose port and start Laravel
+# Expose port for php artisan serve
 EXPOSE 8000
 CMD ["php", "artisan", "serve", "--host=0.0.0.0", "--port=8000"]

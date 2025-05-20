@@ -15,41 +15,41 @@ services:
       - backend
 
   backend:
-    build: ./backend
-      
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
     container_name: backend_container
     restart: always
     ports:
-      - "8000:8000"
+      - "8000:8000" 
     env_file:
       - .env
-  
-    command:  php artisan serve --host=0.0.0.0 --port=8000
     volumes:
       - ./backend:/app
-      - ./.env:/app/.env
-
     networks:
       - db-network
       - front-network
     depends_on:
-      - mysql
- 
+      mysql:
+        condition: service_healthy
+
   adminer:
     image: adminer
     container_name: adminer
     restart: always
+    ports:
+      - "9080:8080"
     env_file:
       - .env
-    ports:
-      - 9080:9080
+    environment:
+      - ADMINER_DEFAULT_SERVER=${ADMINER_DEFAULT_SERVER}
+      - ADMINER_DESIGN=pepa-linha-dark
     networks:
       - db-network
-    environment:
-      - ADMINER_DEFAULT_SERVER=mysql
-      - ADMINER_DESIGN=pepa-linha-dark
     depends_on:
-      - mysql
+      mysql:
+        condition: service_healthy
+
   mysql:
     image: mysql:8.4
     container_name: mysql_db
@@ -58,20 +58,24 @@ services:
     env_file:
       - .env
     environment:
-    - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
-    - MYSQL_DATABASE=${MYSQL_DATABASE}
-    - MYSQL_USER=${MYSQL_USER}
-    - MYSQL_PASSWORD=${MYSQL_PASSWORD}
-
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+      - MYSQL_DATABASE=${MYSQL_DATABASE}
+      - MYSQL_USER=${MYSQL_USER}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
     volumes:
       - ./database/db.dump.sql:/docker-entrypoint-initdb.d/db.dump.sql
       - db_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "${MYSQL_USER}", "-p${MYSQL_PASSWORD}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
     networks:
       - db-network
 
 volumes:
   db_data:
+
 networks:
   db-network:
   front-network:
-  
