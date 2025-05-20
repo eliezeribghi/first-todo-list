@@ -24,6 +24,7 @@ jobs:
   laravel-tests:
     name: Run Laravel Tests in Docker
     runs-on: ubuntu-latest
+    environment: firsttodo-list
 
     env:
       DB_HOST: mysql
