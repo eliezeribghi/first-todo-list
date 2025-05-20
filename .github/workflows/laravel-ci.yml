@@ -35,8 +35,8 @@ jobs:
       MYSQL_DATABASE: todolist
       MYSQL_USER: user_dbb
       MYSQL_PASSWORD: ${{ secrets.MYSQL_PASSWORD }}
-      SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
       ADMINER_DEFAULT_SERVER: mysql
+      SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
 
     steps:
       - name: Afficher les paramètres de déploiement
@@ -72,11 +72,11 @@ jobs:
             echo "DB_PORT=${{ env.DB_PORT }}"
             echo "DB_DATABASE=${{ env.DB_DATABASE }}"
             echo "DB_USERNAME=${{ env.DB_USERNAME }}"
-            echo "DB_PASSWORD=${{ env.DB_PASSWORD }}"
-            echo "MYSQL_ROOT_PASSWORD=${{ env.MYSQL_ROOT_PASSWORD }}"
+            echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}"
+            echo "MYSQL_ROOT_PASSWORD=${{ secrets.MYSQL_ROOT_PASSWORD }}"
             echo "MYSQL_DATABASE=${{ env.MYSQL_DATABASE }}"
             echo "MYSQL_USER=${{ env.MYSQL_USER }}"
-            echo "MYSQL_PASSWORD=${{ env.MYSQL_PASSWORD }}"
+            echo "MYSQL_PASSWORD=${{ secrets.MYSQL_PASSWORD }}"
             echo "ADMINER_DEFAULT_SERVER=${{ env.ADMINER_DEFAULT_SERVER }}"
             echo "BROADCAST_DRIVER=log"
             echo "CACHE_DRIVER=file"
@@ -84,8 +84,26 @@ jobs:
             echo "QUEUE_CONNECTION=sync"
             echo "SESSION_DRIVER=file"
             echo "SESSION_LIFETIME=120"
+            echo "REDIS_HOST=127.0.0.1"
+            echo "REDIS_PASSWORD=null"
+            echo "REDIS_PORT=6379"
+            echo "MAIL_MAILER=smtp"
+            echo "MAIL_HOST=mailhog"
+            echo "MAIL_PORT=1025"
+            echo "MAIL_USERNAME=null"
+            echo "MAIL_PASSWORD=null"
+            echo "MAIL_ENCRYPTION=null"
+            echo "MAIL_FROM_ADDRESS=null"
+            echo "MAIL_FROM_NAME=\"Laravel\""
           } > .env
           cat .env # Pour débogage
+
+      - name: 🔍 Debug environment variables
+        run: |
+          echo "DB_PASSWORD is set to: ${{ secrets.DB_PASSWORD }}"
+          echo "MYSQL_ROOT_PASSWORD is set to: ${{ secrets.MYSQL_ROOT_PASSWORD }}"
+          echo "MYSQL_PASSWORD is set to: ${{ secrets.MYSQL_PASSWORD }}"
+          cat .env
 
       - name: 💾 Cache Composer dependencies
         uses: actions/cache@v3
@@ -105,12 +123,12 @@ jobs:
       - name: ⏳ Wait for DB to be ready
         run: |
           for i in {1..30}; do
-            docker-compose exec -T mysql mysqladmin ping -h mysql -u ${{ env.DB_USERNAME }} -p${{ env.DB_PASSWORD }} --silent && break
+            docker-compose exec -T mysql mysqladmin ping -h mysql -u ${{ env.DB_USERNAME }} -p${{ secrets.DB_PASSWORD }} --silent && break
             echo "Waiting for DB..."
             docker-compose ps
             sleep 2
           done
-          if ! docker-compose exec -T mysql mysqladmin ping -h mysql -u ${{ env.DB_USERNAME }} -p${{ env.DB_PASSWORD }} --silent; then
+          if ! docker-compose exec -T mysql mysqladmin ping -h mysql -u ${{ env.DB_USERNAME }} -p${{ secrets.DB_PASSWORD }} --silent; then
             echo "Database failed to start"
             docker-compose logs mysql
             exit 1
@@ -141,7 +159,7 @@ jobs:
         run: docker-compose down --volumes --remove-orphans
 
       - name: 📢 Notify Slack on failure
-        if: failure() && github.event_name != 'workflow_dispatch' && env.SLACK_BOT_TOKEN != '' # Correction à la ligne 144
+        if: failure() && github.event_name != 'workflow_dispatch' && env.SLACK_BOT_TOKEN != ''
         uses: slackapi/slack-github-action@v1.27.0
         with:
           slack-bot-token: ${{ secrets.SLACK_BOT_TOKEN }}
