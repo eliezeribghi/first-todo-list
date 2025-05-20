@@ -63,8 +63,9 @@ services:
       - MYSQL_USER=${MYSQL_USER}
       - MYSQL_PASSWORD=${MYSQL_PASSWORD}
     volumes:
-      - ./database/db.dump.sql:/docker-entrypoint-initdb.d/db.dump.sql
       - db_data:/var/lib/mysql
+      # Commenté temporairement pour tester sans db.dump.sql
+      # - ./database/db.dump.sql:/docker-entrypoint-initdb.d/db.dump.sql
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "${MYSQL_USER}", "-p${MYSQL_PASSWORD}"]
       interval: 5s
