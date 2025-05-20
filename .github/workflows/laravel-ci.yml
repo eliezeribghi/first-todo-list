@@ -24,7 +24,7 @@ jobs:
   laravel-tests:
     name: Run Laravel Tests in Docker
     runs-on: ubuntu-latest
-    environment: firsttodo-list
+    environment: firsttodo-list # Environnement pour accéder aux secrets
 
     env:
       DB_HOST: mysql
@@ -59,6 +59,13 @@ jobs:
 
       - name: 📄 Display docker-compose.yml
         run: cat docker-compose.yml
+
+      - name: 🔍 Debug secrets before creating .env
+        run: |
+          echo "DB_PASSWORD is set to: ${{ secrets.DB_PASSWORD || 'NOT_SET' }}"
+          echo "MYSQL_ROOT_PASSWORD is set to: ${{ secrets.MYSQL_ROOT_PASSWORD || 'NOT_SET' }}"
+          echo "MYSQL_PASSWORD is set to: ${{ secrets.MYSQL_PASSWORD || 'NOT_SET' }}"
+          echo "SLACK_BOT_TOKEN is set to: ${{ secrets.SLACK_BOT_TOKEN || 'NOT_SET' }}"
 
       - name: 📄 Create .env file
         run: |
@@ -101,50 +108,72 @@ jobs:
 
       - name: 🔍 Debug environment variables
         run: |
-          echo "DB_PASSWORD is set to: ${{ secrets.DB_PASSWORD }}"
-          echo "MYSQL_ROOT_PASSWORD is set to: ${{ secrets.MYSQL_ROOT_PASSWORD }}"
-          echo "MYSQL_PASSWORD is set to: ${{ secrets.MYSQL_PASSWORD }}"
+          echo "DB_PASSWORD is set to: ${{ secrets.DB_PASSWORD || 'NOT_SET' }}"
+          echo "MYSQL_ROOT_PASSWORD is set to: ${{ secrets.MYSQL_ROOT_PASSWORD || 'NOT_SET' }}"
+          echo "MYSQL_PASSWORD is set to: ${{ secrets.MYSQL_PASSWORD || 'NOT_SET' }}"
           cat .env
 
-      - name: 💾 Cache Composer dependencies
-        uses: actions/cache@v3
-        with:
-          path: vendor
-          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-composer-
-
-      - name: 🚀 Build and start containers
+      - name: 🚀 Build and start MySQL only
         run: |
-          echo "Starting Docker Compose..."
-          docker-compose up -d --build
-          echo "Docker Compose started, listing containers..."
+          echo "Starting MySQL with Docker Compose..."
+          docker-compose up -d --build mysql
+          echo "Listing containers..."
           docker-compose ps
 
       - name: 📝 Show MySQL logs immediately
         if: always()
         run: docker-compose logs mysql
 
-      - name: ⏳ Wait for DB to be ready
+      - name: 🔍 Check MySQL container environment variables
+        run: docker-compose exec -T mysql env || echo "Failed to access MySQL container environment"
+
+      - name: ⏳ Wait for MySQL to be fully ready
         run: |
-          for i in {1..30}; do
-            docker-compose exec -T mysql mysqladmin ping -h mysql -u ${{ env.DB_USERNAME }} -p${{ secrets.DB_PASSWORD }} --silent && break
-            echo "Waiting for DB..."
+          echo "Waiting for MySQL to be ready..."
+          for i in {1..60}; do
+            if docker-compose exec -T mysql mysqladmin ping -h mysql -u ${{ env.DB_USERNAME }} -p${{ secrets.DB_PASSWORD }} --silent; then
+              echo "MySQL is ready!"
+              break
+            fi
+            echo "Waiting for MySQL... ($i/60)"
             docker-compose ps
             sleep 2
           done
           if ! docker-compose exec -T mysql mysqladmin ping -h mysql -u ${{ env.DB_USERNAME }} -p${{ secrets.DB_PASSWORD }} --silent; then
-            echo "Database failed to start"
+            echo "MySQL failed to start"
             docker-compose logs mysql
             exit 1
           fi
 
-      - name: 📝 Show MySQL logs if DB is not ready
+      - name: 🚀 Start remaining containers
+        run: |
+          echo "Starting remaining containers..."
+          docker-compose up -d --build
+          echo "Listing containers..."
+          docker-compose ps
+
+      - name: 📝 Show backend logs if startup fails
         if: failure()
-        run: docker-compose logs mysql
+        run: docker-compose logs backend
 
       - name: 📦 Install Composer dependencies
-        run: docker-compose exec -T backend composer install --no-dev --optimize-autoloader
+        run: |
+          echo "Waiting for backend to be ready..."
+          for i in {1..30}; do
+            if docker ps --filter "name=backend_container" --filter "status=running" -q; then
+              echo "Backend is running!"
+              docker-compose exec -T backend composer install --no-dev --optimize-autoloader
+              break
+            fi
+            echo "Waiting for backend... ($i/30)"
+            docker-compose ps
+            sleep 2
+          done
+          if ! docker ps --filter "name=backend_container" --filter "status=running" -q; then
+            echo "Backend failed to start"
+            docker-compose logs backend
+            exit 1
+          fi
 
       - name: 🔑 Generate application key
         run: docker-compose exec -T backend php artisan key:generate
