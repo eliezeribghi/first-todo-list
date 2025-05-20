@@ -60,8 +60,21 @@ jobs:
           chmod +x /usr/local/bin/docker-compose
           docker-compose --version
 
+      - name: 🛠 Install yq for YAML parsing
+        run: |
+          sudo wget https://github.com/mikefarah/yq/releases/download/v4.44.3/yq_linux_amd64 -O /usr/bin/yq
+          sudo chmod +x /usr/bin/yq
+          yq --version
+
       - name: 📄 Display docker-compose.yml
         run: cat docker-compose.yml
+
+      - name: 🔍 Debug docker-compose config
+        run: |
+          echo "Docker Compose config output:"
+          docker-compose config
+          echo "Checking backend service definition:"
+          docker-compose config | yq e '.services.backend' -
 
       - name: 🔍 Debug secrets before creating .env
         run: |
@@ -161,21 +174,26 @@ jobs:
           docker-compose build --no-cache backend
           echo "Backend image built."
           echo "Listing built images..."
-          docker images | grep backend
+          docker images | grep backend || echo "No backend images found"
 
       - name: 📦 Install Composer dependencies in temporary container
         run: |
           echo "Installing Composer dependencies in temporary container..."
+          # Tenter de récupérer l'image définie explicitement
           BACKEND_IMAGE=$(docker-compose config | yq e '.services.backend.image // ""' -)
           if [ -z "$BACKEND_IMAGE" ]; then
             echo "No explicit image defined, using default build image..."
-            BACKEND_IMAGE=$(docker images | grep "$(docker-compose config | grep 'build:.*backend' | awk '{print $1}' | head -n 1)" | awk '{print $1}' | head -n 1)
+            # Récupérer le nom du projet depuis docker-compose
+            PROJECT_NAME=$(docker-compose config | yq e '.name // "first-todo-list"' - | tr '[:upper:]' '[:lower:]')
+            BACKEND_IMAGE="${PROJECT_NAME}_backend"
+            echo "Attempting to find image: $BACKEND_IMAGE"
+            if ! docker images | grep -q "$BACKEND_IMAGE"; then
+              echo "Error: Backend image $BACKEND_IMAGE not found"
+              docker images
+              exit 1
+            fi
           fi
           echo "Using backend image: $BACKEND_IMAGE"
-          if [ -z "$BACKEND_IMAGE" ]; then
-            echo "Error: Could not determine backend image"
-            exit 1
-          fi
           docker run --rm -v $(pwd)/backend:/app $BACKEND_IMAGE bash -c "cd /app && composer --version && export COMPOSER_MEMORY_LIMIT=-1 && composer install --no-dev --no-plugins --prefer-dist --optimize-autoloader"
           echo "Composer dependencies installed."
 
@@ -184,7 +202,8 @@ jobs:
           echo "Setting up Laravel storage and cache directories..."
           BACKEND_IMAGE=$(docker-compose config | yq e '.services.backend.image // ""' -)
           if [ -z "$BACKEND_IMAGE" ]; then
-            BACKEND_IMAGE=$(docker images | grep "$(docker-compose config | grep 'build:.*backend' | awk '{print $1}' | head -n 1)" | awk '{print $1}' | head -n 1)
+            PROJECT_NAME=$(docker-compose config | yq e '.name // "first-todo-list"' - | tr '[:upper:]' '[:lower:]')
+            BACKEND_IMAGE="${PROJECT_NAME}_backend"
           fi
           docker run --rm -v $(pwd)/backend:/app $BACKEND_IMAGE bash -c "cd /app && mkdir -p storage/framework/sessions storage/framework/views storage/framework/cache bootstrap/cache && chmod -R 775 storage bootstrap/cache && chown -R www-data:www-data storage bootstrap/cache || true"
           echo "Directories set up."
@@ -253,7 +272,7 @@ jobs:
         env:
           SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
         with:
-          channel-id: github # Remplacer par l'ID correct du canal Slack
+          channel-id: C07XYZ123 # Remplacer par l'ID correct du canal Slack
           slack-message: |
             ❌ Laravel CI failed for *${{ github.repository }}*
             Ref: `${{ github.ref }}`
