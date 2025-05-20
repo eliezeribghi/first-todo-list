@@ -120,6 +120,10 @@ jobs:
           echo "Docker Compose started, listing containers..."
           docker-compose ps
 
+      - name: 📝 Show MySQL logs immediately
+        if: always()
+        run: docker-compose logs mysql
+
       - name: ⏳ Wait for DB to be ready
         run: |
           for i in {1..30}; do
