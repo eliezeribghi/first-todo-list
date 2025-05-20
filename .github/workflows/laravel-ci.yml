@@ -49,16 +49,16 @@ jobs:
       - name: 🛎 Checkout repository
         uses: actions/checkout@v4
 
-      - name: 🐳 Setup Docker Compose
-        run: |
-          docker --version
-          sudo rm -f /usr/local/bin/docker-compose
-          curl -L "https://github.com/docker/compose/releases/download/v2.29.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-          chmod +x /usr/local/bin/docker-compose
-          docker-compose --version
+      # - name: 🐳 Setup Docker Compose
+      #   run: |
+      #     docker --version
+      #     sudo rm -f /usr/local/bin/docker-compose
+      #     curl -L "https://github.com/docker/compose/releases/download/v2.29.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+      #     chmod +x /usr/local/bin/docker-compose
+      #     docker-compose --version
 
-      - name: 📄 Display docker-compose.yml
-        run: cat docker-compose.yml
+      # - name: 📄 Display docker-compose.yml
+      #   run: cat docker-compose.yml
 
       - name: 🔍 Debug secrets before creating .env
         run: |
@@ -163,27 +163,27 @@ jobs:
         if: always()
         run: docker-compose logs backend
 
-      - name: 📦 Install Composer dependencies
-        run: |
-          echo "Waiting for backend to be ready..."
-          for i in {1..30}; do
-            if docker ps --filter "name=backend_container" --filter "status=running" -q; then
-              echo "Backend is running!"
-              echo "Available memory before composer install:"
-              free -m
-              # Optimiser la mémoire et utiliser des options légères
-              docker-compose exec -T backend bash -c "export COMPOSER_MEMORY_LIMIT=-1 && composer install --no-dev --no-plugins --prefer-dist --optimize-autoloader"
-              break
-            fi
-            echo "Waiting for backend... ($i/30)"
-            docker-compose ps
-            sleep 2
-          done
-          if ! docker ps --filter "name=backend_container" --filter "status=running" -q; then
-            echo "Backend failed to start"
-            docker-compose logs backend
-            exit 1
-          fi
+      # - name: 📦 Install Composer dependencies
+      #   run: |
+      #     echo "Waiting for backend to be ready..."
+      #     for i in {1..30}; do
+      #       if docker ps --filter "name=backend_container" --filter "status=running" -q; then
+      #         echo "Backend is running!"
+      #         echo "Available memory before composer install:"
+      #         free -m
+      #         # Optimiser la mémoire et utiliser des options légères
+      #         docker-compose exec -T backend bash -c "export COMPOSER_MEMORY_LIMIT=-1 && composer install --no-dev --no-plugins --prefer-dist --optimize-autoloader"
+      #         break
+      #       fi
+      #       echo "Waiting for backend... ($i/30)"
+      #       docker-compose ps
+      #       sleep 2
+      #     done
+      #     if ! docker ps --filter "name=backend_container" --filter "status=running" -q; then
+      #       echo "Backend failed to start"
+      #       docker-compose logs backend
+      #       exit 1
+      #     fi
 
       - name: 🚀 Start remaining containers
         run: |
