@@ -140,7 +140,7 @@ jobs:
         run: docker-compose down --volumes --remove-orphans
 
       - name: 📢 Notify Slack on failure
-        if: failure() && github.event_name != 'workflow_dispatch' && secrets.SLACK_BOT_TOKEN
+        if: failure() && github.event_name != 'workflow_dispatch' && secrets.SLACK_BOT_TOKEN != ''
         uses: slackapi/slack-github-action@v1.27.0
         with:
           slack-bot-token: ${{ secrets.SLACK_BOT_TOKEN }}
