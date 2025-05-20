@@ -94,7 +94,7 @@ jobs:
       - name: 🐳 Démarrer les conteneurs Docker
         run: |
           docker-compose up -d
-          sleep 5
+          sleep 30
 
       - name: 🔍 Vérifier que `.env` est bien présent dans le backend
         run: docker-compose exec -T backend ls -l /app/.env
