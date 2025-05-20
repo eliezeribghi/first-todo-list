@@ -1,4 +1,4 @@
-name: 🚀 Laravel CI (Docker)
+name: 🚀 Laravel CI (Docker + MySQL Checks)
 
 on:
   workflow_dispatch:
@@ -75,6 +75,9 @@ jobs:
             echo "QUEUE_CONNECTION=sync"
             echo "SESSION_DRIVER=file"
             echo "SESSION_LIFETIME=120"
+            echo "REDIS_HOST=127.0.0.1"
+            echo "REDIS_PASSWORD=null"
+            echo "REDIS_PORT=6379"
             echo "MAIL_MAILER=smtp"
             echo "MAIL_HOST=mailhog"
             echo "MAIL_PORT=1025"
@@ -99,20 +102,27 @@ jobs:
             sleep 2
           done
 
+      - name: 🧪 Vérifier si la base `todolist` contient des données
+        run: |
+          echo "🔎 Test SQL direct dans MySQL"
+          docker-compose exec -T mysql mysql -h mysql -u ${{ env.DB_USERNAME }} -p${{ secrets.DB_PASSWORD }} -e "USE todolist; SELECT * FROM tasks;"
+
       - name: 📦 Installer les dépendances Composer dans le conteneur
         run: |
           docker-compose exec -T backend composer install --no-interaction --prefer-dist --optimize-autoloader
 
-      - name: 🔑 Générer la clé d’application
-        run: docker-compose exec -T backend php artisan key:generate
+      # - name: 🔑 Générer la clé d’application
+      #   run: docker-compose exec -T backend php artisan key:generate
 
       - name: ⚙️ Cacher la config + routes Laravel
         run: |
           docker-compose exec -T backend php artisan config:cache
           docker-compose exec -T backend php artisan route:cache
 
-      - name: 📜 Lancer les migrations
-        run: docker-compose exec -T backend php artisan migrate --force
+      - name: 🧪 Tester si Laravel accède bien à la BDD (table `tasks`)
+        run: |
+          echo "🧪 Vérification Laravel → MySQL"
+          docker-compose exec -T backend php artisan tinker --execute="DB::table('tasks')->get();"
 
       - name: ✅ Exécuter les tests Laravel
         run: docker-compose exec -T backend php artisan test
@@ -131,10 +141,10 @@ jobs:
         env:
           SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
         with:
-          channel-id: C07XYZ123 # Remplace par le bon ID
+          channel-id: C07XYZ123 # Remplace par ton vrai ID Slack
           slack-message: |
             ❌ Laravel CI failed for *${{ github.repository }}*
             Ref: `${{ github.ref }}`
-            Commit: `${{ github.sha }}`
             Auteur: `${{ github.actor }}`
+            Commit: `${{ github.sha }}`
             📎 <${{ github.event.repository.html_url }}/commit/${{ github.sha }}|Voir le commit>
