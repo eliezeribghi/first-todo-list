@@ -1,0 +1,125 @@
+name: Laravel CI
+
+on:
+  workflow_dispatch:
+    inputs:
+      environnement:
+        description: 'Choisir l’environnement'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+          - staging
+          - production
+      version:
+        description: 'Version à déployer'
+        required: false
+  push:
+    branches: [master, github-action]
+    tags: ['v*.*.*']
+  pull_request:
+    branches: [master, github-action]
+
+jobs:
+  laravel-tests:
+    name: Run Laravel Tests in Docker
+    runs-on: ubuntu-latest
+
+    env:
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_DATABASE: todolist
+      DB_USERNAME: user_dbb
+      DB_PASSWORD: test
+
+    steps:
+      - name: Afficher les paramètres de déploiement
+        if: github.event_name == 'workflow_dispatch'
+        run: |  
+          echo "Déploiement sur ${{ github.event.inputs.environnement }}"
+          echo "Version : ${{ github.event.inputs.version || 'non spécifiée' }}"
+
+      - name: 🛎 Checkout repository
+        uses: actions/checkout@v4
+
+      - name: 🐳 Setup Docker Compose
+        run: |
+          docker --version
+          sudo rm -f /usr/local/bin/docker-compose
+          curl -L "https://github.com/docker/compose/releases/download/v2.29.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+          chmod +x /usr/local/bin/docker-compose
+          docker-compose --version
+
+      - name: 📄 Create .env file
+        run: |
+          {
+            echo "APP_NAME=Laravel"
+            echo "APP_ENV=local"
+            echo "APP_KEY="
+            echo "APP_DEBUG=true"
+            echo "APP_URL=http://localhost:8000"
+            echo "DB_CONNECTION=mysql"
+            echo "DB_HOST=${{ env.DB_HOST }}"
+            echo "DB_PORT=${{ env.DB_PORT }}"
+            echo "DB_DATABASE=${{ env.DB_DATABASE }}"
+            echo "DB_USERNAME=${{ env.DB_USERNAME }}"
+            echo "DB_PASSWORD=${{ env.DB_PASSWORD }}"
+          } > .env
+
+      - name: 💾 Cache Composer dependencies
+        uses: actions/cache@v3
+        with:
+          path: vendor
+          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-composer-
+
+      - name: 🚀 Build and start containers
+        run: docker-compose up -d --build
+
+      - name: ⏳ Wait for DB to be ready
+        run: |
+          for i in {1..30}; do
+            docker-compose exec -T mysql mysqladmin ping -h mysql -u ${{ env.DB_USERNAME }} -p${{ env.DB_PASSWORD }} --silent && break
+            echo 'Waiting for DB...'
+            sleep 2
+          done
+
+      - name: 📦 Install Composer dependencies
+        run: docker-compose exec -T backend composer install
+
+      - name: 🔑 Generate application key
+        run: docker-compose exec -T backend php artisan key:generate
+
+      - name: 🔄 Run migrations
+        run: docker-compose exec -T backend php artisan migrate --force
+
+      - name: ✅ Run PHPUnit tests
+        run: docker-compose exec -T backend php artisan test
+
+      - name: 📜 Show logs if tests fail
+        if: failure()
+        run: docker-compose logs
+
+      - name: 🛑 Stop containers
+        if: always()
+        run: docker-compose down --volumes --remove-orphans
+
+      - name: 📢 Notify Slack on failure
+        if: failure() && github.event_name != 'workflow_dispatch' && secrets.SLACK_BOT_TOKEN
+        uses: slackapi/slack-github-action@v1.27.0
+        with:
+          slack-bot-token: ${{ secrets.SLACK_BOT_TOKEN }}
+          channel-id: 'github'
+          text: |
+            ❌ Laravel CI failed for *${{ github.repository }}*
+            Ref: `${{ github.ref }}`
+            Author: `${{ github.actor }}`
+            Commit: `${{ github.sha }}`
+            URL: `<${{ github.event.repository.html_url }}/commit/${{ github.sha }}|View Commit>`
+            ${{ github.event.pull_request.html_url && format('PR: <{0}|View PR>', github.event.pull_request.html_url) || '' }}
+            Repository: `<${{ github.event.repository.html_url }}|${{ github.event.repository.name }}>`
+            Branch: `${{ github.ref }}`
+            Commit Message: `${{ github.event.head_commit.message || 'N/A' }}`
+            Commit Author: `${{ github.event.head_commit.author.name || github.actor }}`
+            Commit Author Email: `${{ github.event.head_commit.author.email || 'N/A' }}`
