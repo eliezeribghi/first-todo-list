@@ -60,14 +60,7 @@ jobs:
       #     chmod +x /usr/local/bin/docker-compose
       #     docker-compose --version
 
-      - name: Installer Docker Compose
-        run: |
-         sudo apt-get update
-         sudo apt-get install -y docker-compose
-
-      - name: Démarrer les conteneurs Docker
-        run: docker-compose up -d
-
+     
       # - name: 🛠 Install yq for YAML parsing
       #   run: |
       #     sudo wget https://github.com/mikefarah/yq/releases/download/v4.44.3/yq_linux_amd64 -O /usr/bin/yq
@@ -91,44 +84,51 @@ jobs:
       #     echo "MYSQL_PASSWORD is set to: ${{ secrets.MYSQL_PASSWORD || 'NOT_SET' }}"
       #     echo "SLACK_BOT_TOKEN is set to: ${{ secrets.SLACK_BOT_TOKEN || 'NOT_SET' }}"
 
-      # - name: 📄 Create .env file
-      #   run: |
-      #     {
-      #       echo "APP_NAME=Laravel"
-      #       echo "APP_ENV=local"
-      #       echo "APP_KEY="
-      #       echo "APP_DEBUG=true"
-      #       echo "APP_URL=http://localhost:8000"
-      #       echo "DB_CONNECTION=mysql"
-      #       echo "DB_HOST=${{ env.DB_HOST }}"
-      #       echo "DB_PORT=${{ env.DB_PORT }}"
-      #       echo "DB_DATABASE=${{ env.DB_DATABASE }}"
-      #       echo "DB_USERNAME=${{ env.DB_USERNAME }}"
-      #       echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}"
-      #       echo "MYSQL_ROOT_PASSWORD=${{ secrets.MYSQL_ROOT_PASSWORD }}"
-      #       echo "MYSQL_DATABASE=${{ env.MYSQL_DATABASE }}"
-      #       echo "MYSQL_USER=${{ env.MYSQL_USER }}"
-      #       echo "MYSQL_PASSWORD=${{ secrets.MYSQL_PASSWORD }}"
-      #       echo "ADMINER_DEFAULT_SERVER=${{ env.ADMINER_DEFAULT_SERVER }}"
-      #       echo "BROADCAST_DRIVER=log"
-      #       echo "CACHE_DRIVER=file"
-      #       echo "FILESYSTEM_DRIVER=local"
-      #       echo "QUEUE_CONNECTION=sync"
-      #       echo "SESSION_DRIVER=file"
-      #       echo "SESSION_LIFETIME=120"
-      #       echo "REDIS_HOST=127.0.0.1"
-      #       echo "REDIS_PASSWORD=null"
-      #       echo "REDIS_PORT=6379"
-      #       echo "MAIL_MAILER=smtp"
-      #       echo "MAIL_HOST=mailhog"
-      #       echo "MAIL_PORT=1025"
-      #       echo "MAIL_USERNAME=null"
-      #       echo "MAIL_PASSWORD=null"
-      #       echo "MAIL_ENCRYPTION=null"
-      #       echo "MAIL_FROM_ADDRESS=null"
-      #       echo "MAIL_FROM_NAME=\"Laravel\""
-      #     } > .env
-      #     cat .env
+      - name: 📄 Create .env file
+        run: |
+          {
+            echo "APP_NAME=Laravel"
+            echo "APP_ENV=local"
+            echo "APP_KEY="
+            echo "APP_DEBUG=true"
+            echo "APP_URL=http://localhost:8000"
+            echo "DB_CONNECTION=mysql"
+            echo "DB_HOST=${{ env.DB_HOST }}"
+            echo "DB_PORT=${{ env.DB_PORT }}"
+            echo "DB_DATABASE=${{ env.DB_DATABASE }}"
+            echo "DB_USERNAME=${{ env.DB_USERNAME }}"
+            echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}"
+            echo "MYSQL_ROOT_PASSWORD=${{ secrets.MYSQL_ROOT_PASSWORD }}"
+            echo "MYSQL_DATABASE=${{ env.MYSQL_DATABASE }}"
+            echo "MYSQL_USER=${{ env.MYSQL_USER }}"
+            echo "MYSQL_PASSWORD=${{ secrets.MYSQL_PASSWORD }}"
+            echo "ADMINER_DEFAULT_SERVER=${{ env.ADMINER_DEFAULT_SERVER }}"
+            echo "BROADCAST_DRIVER=log"
+            echo "CACHE_DRIVER=file"
+            echo "FILESYSTEM_DRIVER=local"
+            echo "QUEUE_CONNECTION=sync"
+            echo "SESSION_DRIVER=file"
+            echo "SESSION_LIFETIME=120"
+            echo "REDIS_HOST=127.0.0.1"
+            echo "REDIS_PASSWORD=null"
+            echo "REDIS_PORT=6379"
+            echo "MAIL_MAILER=smtp"
+            echo "MAIL_HOST=mailhog"
+            echo "MAIL_PORT=1025"
+            echo "MAIL_USERNAME=null"
+            echo "MAIL_PASSWORD=null"
+            echo "MAIL_ENCRYPTION=null"
+            echo "MAIL_FROM_ADDRESS=null"
+            echo "MAIL_FROM_NAME=\"Laravel\""
+          } > .env
+          cat .env
+      - name: Installer Docker Compose
+        run: |
+         sudo apt-get update
+         sudo apt-get install -y docker-compose
+
+      - name: Démarrer les conteneurs Docker
+        run: docker-compose up -d
 
       # - name: 🔍 Check system memory
       #   run: |
