@@ -152,38 +152,43 @@ jobs:
             exit 1
           fi
 
+      - name: 📦 Install Composer dependencies in temporary container
+        run: |
+          echo "Installing Composer dependencies in temporary container..."
+          docker run --rm -v $(pwd)/backend:/app $(docker-compose build --no-cache backend >/dev/null 2>&1 && docker-compose config | grep "image:.*backend" | awk '{print $2}') bash -c "cd /app && export COMPOSER_MEMORY_LIMIT=-1 && composer install --no-dev --no-plugins --prefer-dist --optimize-autoloader"
+          echo "Composer dependencies installed."
+
       - name: 🚀 Start backend container only
         run: |
           echo "Starting backend container..."
-          docker compose up -d --build backend
+          docker-compose up -d --build backend
           echo "Listing containers..."
-          docker compose ps
+          docker-compose ps
 
       - name: 📝 Show backend logs immediately
         if: always()
-        run: docker compose logs backend
+        run: docker-compose logs backend
 
-      # - name: 📦 Install Composer dependencies
-      #   run: |
-      #     echo "Waiting for backend to be ready..."
-      #     for i in {1..30}; do
-      #       if docker ps --filter "name=backend_container" --filter "status=running" -q; then
-      #         echo "Backend is running!"
-      #         echo "Available memory before composer install:"
-      #         free -m
-      #         # Optimiser la mémoire et utiliser des options légères
-      #         docker compose exec -T backend bash -c "export COMPOSER_MEMORY_LIMIT=-1 && composer install --no-dev --no-plugins --prefer-dist --optimize-autoloader"
-      #         break
-      #       fi
-      #       echo "Waiting for backend... ($i/30)"
-      #       docker compose ps
-      #       sleep 2
-      #     done
-      #     if ! docker ps --filter "name=backend_container" --filter "status=running" -q; then
-      #       echo "Backend failed to start"
-      #       docker compose logs backend
-      #       exit 1
-      #     fi
+      - name: ⏳ Wait for backend to be stable
+        run: |
+          echo "Waiting for backend to be stable..."
+          for i in {1..30}; do
+            if docker ps --filter "name=backend_container" --filter "status=running" -q; then
+              echo "Backend is running!"
+              break
+            fi
+            echo "Waiting for backend... ($i/30)"
+            docker-compose ps
+            sleep 2
+          done
+          if ! docker ps --filter "name=backend_container" --filter "status=running" -q; then
+            echo "Backend failed to start"
+            docker-compose logs backend
+            exit 1
+          fi
+
+      - name: 🔄 Run migrations
+        run: docker-compose exec -T backend php artisan migrate --force
 
       - name: 🚀 Start remaining containers
         run: |
