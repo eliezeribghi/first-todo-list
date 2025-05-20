@@ -45,6 +45,8 @@ RUN php artisan config:cache \
 # Set user
 USER www-data
 
+# Donner les permissions appropriées
+RUN chown -R www-data:www-data /app
 # Expose port and start Laravel
 EXPOSE 8000
-CMD ["php", "artisan", "serve", "--host=0.0.0.0", "--port=8000"]
+CMD ["tail", "-f", "/dev/null"]
