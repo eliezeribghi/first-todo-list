@@ -57,7 +57,7 @@ jobs:
           {
             echo "APP_NAME=Laravel"
             echo "APP_ENV=local"
-            echo "APP_KEY="
+            echo "APP_KEY=base64:$(openssl rand -base64 32)" # Générer une clé valide
             echo "APP_DEBUG=true"
             echo "APP_URL=http://localhost:8000"
             echo "DB_CONNECTION=mysql"
@@ -115,7 +115,7 @@ jobs:
 
       - name: 🔍 Vérifier que `.env` est bien présent dans le backend
         run: docker-compose exec -T backend ls -l /app/.env
-        
+
       - name: ⏳ Attendre que MySQL soit prêt
         run: |
           echo "⏳ Waiting for MySQL to be ready..."
