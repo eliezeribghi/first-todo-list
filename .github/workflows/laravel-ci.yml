@@ -37,18 +37,14 @@ jobs:
       MYSQL_PASSWORD: test
       ADMINER_DEFAULT_SERVER: mysql
 
-
     steps:
       - name: Afficher les paramètres de déploiement
         run: |  
-         echo "Déploiement sur ${{ github.event.inputs.environnement }}"
-         echo "Version : ${{ github.event.inputs.version }}"
+          echo "Déploiement sur ${{ github.event.inputs.environnement }}"
+          echo "Version : ${{ github.event.inputs.version }}"
 
       - name: 🛎 Checkout repository
         uses: actions/checkout@v4
-
-      - name: 📦 Install Composer dependencies
-        run: docker compose exec -T backend composer install
 
       - name: 🐳 Check Docker installation
         run: |
@@ -76,8 +72,6 @@ jobs:
             echo "ADMINER_DEFAULT_SERVER=${ADMINER_DEFAULT_SERVER}"
           } > .env
 
-
-
       - name: 💾 Cache Composer dependencies
         uses: actions/cache@v3
         with:
@@ -103,17 +97,25 @@ jobs:
             echo 'Waiting for DB...'
             sleep 2
           done
+
       - name: 📝 Afficher les logs MySQL
         run: docker compose logs mysql
+
+      - name: 📦 Install Composer dependencies
+        run: docker compose exec -T backend composer install
+
+      # Optionnel : installer les dépendances npm si besoin
+      # - name: 📦 Install NPM dependencies
+      #   run: docker compose exec -T backend npm install
 
       - name: 🔑 Generate application key
         run: docker compose exec -T backend php artisan key:generate
 
-      - name: ✅ Run PHPUnit tests
-        run: docker compose exec -T backend php artisan test
-
       - name: 🔄 Run migrations
         run: docker compose exec -T backend php artisan migrate --force
+
+      - name: ✅ Run PHPUnit tests
+        run: docker compose exec -T backend php artisan test
 
       - name: 📜 Show logs if tests fail
         if: failure()
@@ -141,12 +143,3 @@ jobs:
             Commit Message: `${{ github.event.head_commit.message }}`
             Commit Author: `${{ github.event.head_commit.author.name }}`
             Commit Author Email: `${{ github.event.head_commit.author.email }}`
-
-
-    # - name: Notify on failure
-    #   if: failure()
-    #   uses: slackapi/slack-github-action@v1.27.0
-    #   with:
-    #     slack-bot-token: ${{ secrets.SLACK_BOT_TOKEN }}
-    #     channel-id: 'github'
-    #     text: 'Laravel CI failed for ${{ github.repository }} on ${{ github.ref }}'
