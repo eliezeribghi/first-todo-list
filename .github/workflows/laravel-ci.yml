@@ -87,6 +87,10 @@ jobs:
             echo "MAIL_FROM_ADDRESS=null"
             echo "MAIL_FROM_NAME=\"Laravel\""
           } > .env
+           cp .env backend/.env
+           
+      - name: 🔍 Vérifier que `.env` est bien présent dans le backend
+        run: docker-compose exec -T backend ls -l /app/.env
 
       - name: 🐳 Démarrer les conteneurs Docker
         run: docker-compose up -d
@@ -111,8 +115,8 @@ jobs:
         run: |
           docker-compose exec -T backend composer install --no-interaction --prefer-dist --optimize-autoloader
 
-      # - name: 🔑 Générer la clé d’application
-      #   run: docker-compose exec -T backend php artisan key:generate
+      - name: 🔑 Générer la clé d’application
+        run: docker-compose exec -T backend php artisan key:generate
 
       - name: ⚙️ Cacher la config + routes Laravel
         run: |
