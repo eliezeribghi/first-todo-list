@@ -192,8 +192,8 @@ jobs:
           echo "Listing containers..."
           docker compose ps
 
-      - name: 🔑 Generate application key
-        run: docker compose exec -T backend php artisan key:generate
+      # - name: 🔑 Generate application key
+      #   run: docker compose exec -T backend php artisan key:generate
 
       - name: 🔄 Run migrations
         run: docker compose exec -T backend php artisan migrate --force
