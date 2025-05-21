@@ -10,14 +10,17 @@ class TaskControllerTest extends TestCase
 {
     use RefreshDatabase;
 
+    /**
+     * Test updating a task's status.
+     *
+     * @return void
+     */
     public function test_update_task_status()
     {
-        $task = Tasks::factory()->create([
-            'title' => 'Tâche à mettre à jour',
-            'status' => 0,
-        ]);
+        $task = Tasks::factory()->create(['title' => 'Tâche à mettre à jour', 'status' => 0]);
 
-        $response = $this->patch("/tasks/{$task->id}", [
+        $response = $this->putJson("/api/task/{$task->id}", [
+            'title' => 'Tâche à mettre à jour',
             'status' => 1,
         ]);
 
