@@ -11,7 +11,7 @@ class TaskControllerTest extends TestCase
     use RefreshDatabase;
 
     /**
-     * Test updating a task's status.
+     * Test updating a task's title.
      *
      * @return void
      */
@@ -20,14 +20,14 @@ class TaskControllerTest extends TestCase
         $task = Tasks::factory()->create(['title' => 'Tâche à mettre à jour', 'status' => 0]);
 
         $response = $this->putJson("/api/task/{$task->id}", [
-            'title' => 'Tâche à mettre à jour',
-            'status' => 1,
+            'title' => 'Tâche modifiée',
         ]);
 
         $response->assertStatus(200);
         $this->assertDatabaseHas('tasks', [
             'id' => $task->id,
-            'status' => 1,
+            'title' => 'Tâche modifiée',
+            'status' => 0, // Le status ne change pas
         ]);
     }
 }
