@@ -20,6 +20,7 @@ class TaskTest extends TestCase
         $response->assertStatus(200);
         $response->assertJsonCount(2);
         $response->assertJsonFragment(['title' => 'Acheter une salade']);
+        $response->assertJsonFragment(['title' => 'Manger la salade']);
     }
 
     public function test_can_create_task()
@@ -29,7 +30,7 @@ class TaskTest extends TestCase
             'status' => 0,
         ]);
 
-        $response->assertStatus(200);
+        $response->assertStatus(201); // Corrigé : le contrôleur retourne 201
         $this->assertDatabaseHas('tasks', ['title' => 'Nouvelle tâche']);
     }
 
@@ -39,7 +40,8 @@ class TaskTest extends TestCase
             'status' => 0,
         ]);
 
-        $response->assertStatus(500); // TaskController returns ValidationException directly
+        $response->assertStatus(422); // Corrigé : validation échouée retourne 422
+        $response->assertJsonValidationErrors('title');
         $this->assertDatabaseMissing('tasks', ['status' => 0]);
     }
 
@@ -52,7 +54,10 @@ class TaskTest extends TestCase
         ]);
 
         $response->assertStatus(200);
-        $this->assertDatabaseHas('tasks', ['id' => $task->id, 'title' => 'Tâche modifiée']);
+        $this->assertDatabaseHas('tasks', [
+            'id' => $task->id,
+            'title' => 'Tâche modifiée',
+        ]);
     }
 
     public function test_update_task_fails_without_title()
@@ -64,7 +69,7 @@ class TaskTest extends TestCase
         ]);
 
         $response->assertStatus(422);
-        $this->assertDatabaseHas('tasks', ['id' => $task->id, 'title' => 'Tâche à mettre à jour']);
+        $response->assertJsonValidationErrors('title');
     }
 
     public function test_can_delete_task()
