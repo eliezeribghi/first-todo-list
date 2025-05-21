@@ -7,10 +7,15 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 class Tasks extends Model
 {
-    use HasFactory;
+   use HasFactory;
     protected $table = 'tasks';
     protected $fillable = ['title', 'status'];
     public $timestamps = true;
+
+    public function isCompleted()
+    {
+        return $this->status === 1;
+    }
 
     public function category(): BelongsTo
     {
