@@ -1,9 +1,8 @@
 FROM php:8.3-fpm
 
-# Définir le répertoire de travail
 WORKDIR /app
 
-# Installer les dépendances système
+# Install system dependencies
 RUN apt-get update && apt-get install -y \
     git \
     curl \
@@ -17,41 +16,67 @@ RUN apt-get update && apt-get install -y \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-# Installer les extensions PHP
+# Install PHP extensions
 RUN docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd zip intl
 RUN pecl install redis && docker-php-ext-enable redis
 
-# Installer Composer
+# Install Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# Copier les fichiers du projet
+# Copy project files
 COPY . .
 
-# Installer les dépendances PHP
+# Install PHP dependencies
 RUN composer install --no-dev --optimize-autoloader
 
-# Copier le fichier .env.example et générer la clé d'application
+# Copy .env file and generate application key
 COPY .env.example .env
 RUN php artisan key:generate
 
-# Créer les dossiers nécessaires pour Laravel et définir les permissions
+# Create required Laravel folders and set permissions
 RUN mkdir -p storage/framework/sessions storage/framework/views storage/framework/cache bootstrap/cache \
     && chmod -R 775 storage bootstrap/cache \
     && chown -R www-data:www-data storage bootstrap/cache
 
-# Mettre en cache la configuration et les routes
+# Cache configuration and routes
 RUN php artisan config:cache \
     && php artisan route:cache
 
-# Définir l'utilisateur
+# Set user
 USER www-data
 
-# Exposer le port 8000
+# Expose port and start Laravel
 EXPOSE 8000
+CMD ["tail", "-f", "/dev/null"]
 
-# Utiliser une variable d'environnement pour choisir le mode
-ARG APP_ENV=production
-ENV APP_ENV=${APP_ENV}
+# FROM php:8.3-fpm
 
-# Lancer le conteneur selon le mode
-CMD [ "/bin/sh", "-c", "if [ \"$APP_ENV\" = \"development\" ]; then tail -f /dev/null; else php artisan serve --host=0.0.0.0 --port=8000; fi" ]
+# # Installer les dépendances système
+# RUN apt-get update && apt-get install -y \
+#     git \
+#     curl \
+#     libpng-dev \
+#     libonig-dev \
+#     libxml2-dev \
+#     zip \
+#     unzip \
+#     libzip-dev \
+#     libicu-dev \
+#     && apt-get clean \
+#     && rm -rf /var/lib/apt/lists/*
+
+# # Installer les extensions PHP
+# RUN docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd zip intl
+# RUN pecl install redis && docker-php-ext-enable redis
+
+# # Installer Composer
+# COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+
+# # Définir le répertoire de travail
+# WORKDIR /app
+
+# # Copier les fichiers du projet
+# COPY . /app
+
+# # Garder le conteneur en vie sans exécuter Laravel
+# CMD ["tail", "-f", "/dev/null"]
