@@ -6,7 +6,7 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: https://github.com/<votre-utilisateur>/aws-infra-oclock.git
+    repoURL: https://github.com/eliezeribghi/aws-infra-oclock.git
     targetRevision: main
     path: .
   destination:
