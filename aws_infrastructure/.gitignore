@@ -20,3 +20,4 @@ override.tf.json
 
 # Lock file (optionnel)
 .terraform.lock.hcl
+../argo/credentials/aws-credentials.yaml

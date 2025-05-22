@@ -6,8 +6,8 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: https://github.com/eliezeribghi/aws-infra-oclock.git
-    targetRevision: main
+    repoURL: https://github.com/eliezeribghi/first-todo-list/aws_infrastructure
+    targetRevision: terraform-argo
     path: .
   destination:
     server: https://kubernetes.default.svc
