@@ -1,4 +1,7 @@
+
+
 FROM php:8.3-fpm
+
 
 # Installer les dépendances système
 RUN apt-get update && apt-get install -y \
@@ -28,4 +31,8 @@ WORKDIR /app
 COPY . /app
 
 # Garder le conteneur en vie sans exécuter Laravel
+
+# CMD ["php", "artisan", "serve", "--host=0.0.0.0", "--port=8000"]
+
 CMD ["tail", "-f", "/dev/null"]
+

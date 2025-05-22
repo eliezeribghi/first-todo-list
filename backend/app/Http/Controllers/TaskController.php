@@ -23,18 +23,23 @@ class TaskController extends Controller
     {
         try {
 
-             $request->validate([
+            $request->validate([
                 'title' => 'required|string|max:255',
             ]);
+
+            $task = new Tasks;
+            $task->title = $request->input('title');
+            $task->status = $request->input('status', 0); // Ajouter status par défaut
+            $task->save();
+
+            return response()->json($task, 201); // Retourner 201 explicitement
         } catch (ValidationException $error) {
-            return $error;
+            return response()->json([
+                'message' => 'Validation Error',
+                'errors' => $error->errors(),
+            ], 422); // Retourner 422 pour les erreurs de validation
         }
 
-        $task = new Tasks;
-        $task->title = $request->input('title');
-        $task->save();
-
-        return $task;
     }
 
     public function delete($id)
