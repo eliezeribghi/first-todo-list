@@ -6,7 +6,7 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: https://github.com/eliezeribghi/first-todo-list/tree/terraform-argo
+    repoURL: https://github.com/eliezeribghi/first-todo-list.git
     targetRevision: terraform-argo
     path: .
   destination:
