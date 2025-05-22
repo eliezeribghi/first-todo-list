@@ -148,10 +148,12 @@ jobs:
         run: |
           echo "🧪 Vérification Laravel → MySQL"
           docker-compose exec -T backend php artisan tinker --execute="DB::table('tasks')->get();"
+
       - name: 🧹 Supprimer la table tasks existante
         run: docker-compose exec -T mysql mysql -u user_dbb -p${{ secrets.DB_PASSWORD }} -e "DROP TABLE IF EXISTS todolist.tasks;"
       - name: ⚙️ Exécuter les migrations
         run: docker-compose exec -T backend php artisan migrate --force
+
 
       - name: ✅ Exécuter les tests Laravel
         run: docker-compose exec -T backend php artisan test
