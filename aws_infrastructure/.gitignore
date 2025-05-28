@@ -1,0 +1,23 @@
+# Ignorer les fichiers d'état de Terraform
+*.tfstate
+*.tfstate.backup
+
+# Répertoire de travail de Terraform
+.terraform/
+
+# Fichiers de plan et de log
+*.tfplan
+crash.log
+
+# Fichiers de variables sensibles
+terraform.tfvars
+
+# Fichiers d'override
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# Lock file (optionnel)
+.terraform.lock.hcl
+../argo/credentials/aws-credentials.yaml
