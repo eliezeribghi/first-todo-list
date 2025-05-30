@@ -21,3 +21,12 @@ module "ec2" {
   instance_count    = var.instance_count
   environment       = "dev"
 }
+
+module "eks" {
+  source          = "terraform-aws-modules/eks/aws"
+  cluster_name    = "dev-eks"
+  cluster_version = "1.29"
+  subnet_ids         = [module.vpc.subnet_id]
+  vpc_id          = module.vpc.vpc_id
+  # ...autres variables nécessaires
+}
