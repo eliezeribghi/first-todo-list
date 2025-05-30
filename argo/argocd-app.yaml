@@ -1,33 +1,14 @@
-# apiVersion: argoproj.io/v1alpha1
-# kind: Application
-# metadata:
-#   name: aws-infra
-#   namespace: argocd
-# spec:
-#   project: default
-#   source:
-#     repoURL: https://github.com/eliezeribghi/first-todo-list.git
-#     targetRevision:  terraform-argo
-#     path: aws_infrastructure/environments/dev
-#   destination:
-#     server: https://kubernetes.default.svc
-#     namespace: default
-#   syncPolicy:
-#     automated:
-#       prune: true
-#       selfHeal: true
-
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: terraform
+  name: terraform-infra-dev
   namespace: argocd
 spec:
   project: default
   source:
-    repoURL: https://github.com/eliezeribghi/aws_infrastructure/environments/dev
+    repoURL: https://github.com/eliezeribghi/first-todo-list.git
     targetRevision: terraform-argo
-    path: /tree/terraform-argo/aws_infrastructure/environments/dev
+    path: https://github.com/eliezeribghi/first-todo-list/tree/master/aws_infrastructure/environments/dev
   destination:
     server: https://kubernetes.default.svc
     namespace: default
