@@ -1,0 +1,22 @@
+apiVersion: run.terraform.io/v1alpha1
+kind: Workspace
+metadata:
+  name: aws-infra-dev
+  namespace: default
+spec:
+  applyOn: ["create", "update"]
+  terraformVersion: "1.5.7"
+  module:
+    source: "git::https://github.com/eliezeribghi/first-todo-list.git//aws_infrastructure/environments/dev"
+  variables:
+    - key: AWS_ACCESS_KEY_ID
+      valueFrom:
+        secretKeyRef:
+          name: aws-credentials
+          key: AWS_ACCESS_KEY_ID
+    - key: AWS_SECRET_ACCESS_KEY
+      valueFrom:
+        secretKeyRef:
+          name: aws-credentials
+          key: AWS_SECRET_ACCESS_KEY
+          
