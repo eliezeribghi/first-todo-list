@@ -1,0 +1,181 @@
+name: 🚀 Laravel CI (Docker + MySQL Checks)
+
+on:
+  workflow_dispatch:
+    inputs:
+      environnement:
+        description: 'Choisir l’environnement'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+          - staging
+          - production
+      version:
+        description: 'Version à déployer'
+        required: false
+
+  push:
+    branches: [master, github-action]
+    tags: ['v*.*.*']
+
+  pull_request:
+    branches: [master, github-action]
+
+jobs:
+  laravel-tests:
+    name: 🧪 Laravel Tests in Docker
+    runs-on: ubuntu-latest
+    environment: firsttodo-list
+
+    env:
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_DATABASE: todolist
+      DB_USERNAME: user_dbb
+      DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+      MYSQL_ROOT_PASSWORD: ${{ secrets.MYSQL_ROOT_PASSWORD }}
+      MYSQL_DATABASE: todolist
+      MYSQL_USER: user_dbb
+      MYSQL_PASSWORD: ${{ secrets.MYSQL_PASSWORD }}
+      ADMINER_DEFAULT_SERVER: mysql
+      SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+
+    steps:
+      - name: 🛎 Checkout repository
+        uses: actions/checkout@v4
+
+      - name: 🐧 Installer Docker Compose
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y docker-compose
+
+     
+
+      - name: 🧾 Générer le fichier .env
+        run: |
+          {
+            echo "APP_NAME=Laravel"
+            echo "APP_ENV=local"
+            echo "APP_KEY=base64:$(openssl rand -base64 32)" # Générer une clé valide
+            echo "APP_DEBUG=true"
+            echo "APP_URL=http://localhost:8000"
+            echo "DB_CONNECTION=mysql"
+            echo "DB_HOST=${{ env.DB_HOST }}"
+            echo "DB_PORT=${{ env.DB_PORT }}"
+            echo "DB_DATABASE=${{ env.DB_DATABASE }}"
+            echo "DB_USERNAME=${{ env.DB_USERNAME }}"
+            echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}"
+            echo "MYSQL_ROOT_PASSWORD=${{ secrets.MYSQL_ROOT_PASSWORD }}"
+            echo "MYSQL_DATABASE=${{ env.MYSQL_DATABASE }}"
+            echo "MYSQL_USER=${{ env.MYSQL_USER }}"
+            echo "MYSQL_PASSWORD=${{ secrets.MYSQL_PASSWORD }}"
+            echo "ADMINER_DEFAULT_SERVER=${{ env.ADMINER_DEFAULT_SERVER }}"
+            echo "BROADCAST_DRIVER=log"
+            echo "CACHE_DRIVER=file"
+            echo "FILESYSTEM_DRIVER=local"
+            echo "QUEUE_CONNECTION=sync"
+            echo "SESSION_DRIVER=file"
+            echo "SESSION_LIFETIME=120"
+            echo "REDIS_HOST=127.0.0.1"
+            echo "REDIS_PASSWORD=null"
+            echo "REDIS_PORT=6379"
+            echo "MAIL_MAILER=smtp"
+            echo "MAIL_HOST=mailhog"
+            echo "MAIL_PORT=1025"
+            echo "MAIL_USERNAME=null"
+            echo "MAIL_PASSWORD=null"
+            echo "MAIL_ENCRYPTION=null"
+            echo "MAIL_FROM_ADDRESS=null"
+            echo "MAIL_FROM_NAME=\"Laravel\""
+          } > .env
+           mkdir -p backend
+            cp .env backend/.env
+            ls -l backend/ # Vérifier que backend/.env existe
+            cat backend/.env # Afficher le contenu pour débogage
+      - name: 🐳 Démarrer les conteneurs Docker
+        run: |
+          docker-compose up -d
+          sleep 30     
+      
+      - name: 📜 Vérifier les logs du conteneur backend
+        run: docker-compose logs backend
+
+      - name: 🔎 Vérifier l’état du conteneur backend
+        run: |
+          if docker-compose ps backend | grep "Up"; then
+            echo "✅ Backend container is running"
+          else
+            echo "❌ Backend container is not running"
+            docker-compose ps
+            exit 1
+          fi
+
+      
+
+      - name: 🔍 Vérifier que `.env` est bien présent dans le backend
+        run: docker-compose exec -T backend ls -l /app/.env
+
+      - name: ⏳ Attendre que MySQL soit prêt
+        run: |
+          echo "⏳ Waiting for MySQL to be ready..."
+          for i in {1..60}; do
+            if docker-compose exec -T mysql mysqladmin ping -h mysql -u ${{ env.DB_USERNAME }} -p${{ secrets.DB_PASSWORD }} --silent; then
+              echo "✅ MySQL is ready!"
+              break
+            fi
+            sleep 2
+          done
+
+      - name: 🧪 Vérifier si la base `todolist` contient des données
+        run: |
+          echo "🔎 Test SQL direct dans MySQL"
+          docker-compose exec -T mysql mysql -h mysql -u ${{ env.DB_USERNAME }} -p${{ secrets.DB_PASSWORD }} -e "USE todolist; SELECT * FROM tasks;"
+
+      - name: 📦 Installer les dépendances Composer dans le conteneur
+        run: |
+          docker-compose exec -T backend composer install --no-interaction --prefer-dist --optimize-autoloader
+
+      - name: 🔑 Générer la clé d’application
+        run: docker-compose exec -T backend php artisan key:generate
+
+      - name: ⚙️ Cacher la config + routes Laravel
+        run: |
+          docker-compose exec -T backend php artisan config:cache
+          docker-compose exec -T backend php artisan route:cache
+
+      - name: 🧪 Tester si Laravel accède bien à la BDD (table `tasks`)
+        run: |
+          echo "🧪 Vérification Laravel → MySQL"
+          docker-compose exec -T backend php artisan tinker --execute="DB::table('tasks')->get();"
+
+      - name: 🧹 Supprimer la table tasks existante
+        run: docker-compose exec -T mysql mysql -u user_dbb -p${{ secrets.DB_PASSWORD }} -e "DROP TABLE IF EXISTS todolist.tasks;"
+      - name: ⚙️ Exécuter les migrations
+        run: docker-compose exec -T backend php artisan migrate --force
+
+
+      - name: ✅ Exécuter les tests Laravel
+        run: docker-compose exec -T backend php artisan test
+
+      - name: 🧾 Afficher les logs si les tests échouent
+        if: failure()
+        run: docker-compose logs
+
+      - name: 🧹 Arrêter les conteneurs
+        if: always()
+        run: docker-compose down --volumes --remove-orphans
+
+      - name: 📢 Notifier Slack en cas d’échec
+        if: failure() && github.event_name != 'workflow_dispatch' && env.SLACK_BOT_TOKEN != ''
+        uses: slackapi/slack-github-action@v1.27.0
+        env:
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+        with:
+          channel-id: C07XYZ123 # Remplace par ton vrai ID Slack
+          slack-message: |
+            ❌ Laravel CI failed for *${{ github.repository }}*
+            Ref: `${{ github.ref }}`
+            Auteur: `${{ github.actor }}`
+            Commit: `${{ github.sha }}`
+            📎 <${{ github.event.repository.html_url }}/commit/${{ github.sha }}|Voir le commit>
