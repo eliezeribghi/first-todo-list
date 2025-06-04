@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Task manager</title>
+  <meta name="description" content="Un gestionnaire de tâches, pour vous aider au quotidien">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <header>
+    <h1>Task manager</h1>
+  </header>
+  <main>
+    <div class="create-task-container">
+      <button>nouvelle tâche</button>
+    </div>
+    <div class="message success" hidden>
+      la nouvelle tâche a bien été ajoutée
+    </div>
+    <div class="message danger" hidden>
+      oops, impossible de sauvegarder la tâche
+    </div>
+    <ul class="tasklist"></ul>
+    <div class="modal-dialog" style="display: none;">
+      <form>
+        <h2>nouvelle tâche</h2>
+        <label for="task-title" class="screen-reader-only">titre de la tâche</label>
+        <input name="title" id="task-title" placeholder="titre de la tâche..." type="text" required>
+        <button type="button">ajouter</button>
+      </form>
+    </div>
+  </main>
+  <script src="/bundle.js"></script>
+</body>
+</html>
