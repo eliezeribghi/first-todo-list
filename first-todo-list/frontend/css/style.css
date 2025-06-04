@@ -1,0 +1,312 @@
+@charset "UTF-8";
+/**
+ * Les variables CSS contiennent des valeurs spécifiques
+ * utilisables à travers toute la feuille de style CSS
+ * https://developer.mozilla.org/fr/docs/Web/CSS/Using_CSS_custom_properties
+ */
+:root {
+  --color-canvas-default: rgb(255, 255, 255);
+  --color-canvas-subtle: rgba(255, 255, 255, 0.70);
+  --color-fg-default: rgb(44, 44, 44);
+  --color-neutral-subtle: rgb(239, 239, 239);
+  --color-neutral-muted: rgba(44, 44, 44, 0.5);
+  --color-border-subtle: rgba(44, 44, 44, 0.1);
+  --color-success-subtle: #29ffcc;
+  --color-danger-subtle: #ffac92;
+  --color-attention-subtle: #ffcd29;
+  --color-shadow-medium: 0 5px 0 rgba(44, 44, 44, 0.10);
+  --color-btn-primary-bg: rgb(44, 44, 44);
+  --color-btn-primary-text: #ffffff;
+}
+
+/*
+  Josh's Custom CSS Reset
+  https://www.joshwcomeau.com/css/custom-css-reset/
+*/
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+* {
+  margin: 0;
+}
+
+html, body {
+  height: 100%;
+}
+
+body {
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+img, picture, video, canvas, svg {
+  display: block;
+  max-width: 100%;
+}
+
+input, button, textarea, select {
+  font: inherit;
+}
+
+p, h1, h2, h3, h4, h5, h6 {
+  overflow-wrap: break-word;
+}
+
+/**
+ * Document
+ */
+html {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+  line-height: 1.4;
+  -webkit-text-size-adjust: 100%;
+     -moz-text-size-adjust: 100%;
+          text-size-adjust: 100%;
+}
+
+body {
+  color: var(--color-fg-default);
+}
+
+/**
+ * Header
+ */
+body > header {
+  background-color: var(--color-attention-subtle);
+  text-align: center;
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 3px solid;
+  box-shadow: var(--color-shadow-medium);
+  position: -webkit-sticky;
+  position: sticky;
+  top: 0;
+  z-index: 2;
+}
+body > header h1 {
+  font-size: 2rem;
+}
+body > header.muted {
+  background-color: var(--color-neutral-subtle);
+  color: var(--color-neutral-muted);
+  border-bottom-color: var(--color-border-subtle);
+  box-shadow: none;
+}
+
+/**
+ * Buttons
+ */
+button {
+  background-color: var(--color-btn-primary-bg);
+  color: var(--color-btn-primary-text);
+  border: none;
+  font-size: 1.5rem;
+  font-weight: 500;
+  border-radius: 0.375rem;
+  padding: 1rem;
+  display: block;
+  width: 100%;
+  cursor: pointer;
+}
+button:active {
+  transform: translateY(0.125rem);
+}
+
+/**
+ * Messages
+ */
+.message {
+  background-color: var(--color-canvas-subtle);
+  font-size: 1.5rem;
+  font-weight: 500;
+  padding: 1rem;
+  width: 100%;
+}
+@media (max-width: 767.98px) {
+  .message {
+    position: -webkit-sticky;
+    position: sticky;
+    top: 4.1875rem;
+    z-index: 1;
+  }
+}
+@media (min-width: 768px) {
+  .message {
+    position: fixed;
+    top: 1.25rem;
+    right: 1.25rem;
+    z-index: 20;
+    margin-bottom: 4.6875rem;
+    margin-left: auto;
+    margin-right: auto;
+    max-width: 31.25rem;
+    text-align: center;
+    border-radius: 0.375rem;
+    border: 3px solid;
+  }
+}
+.message.success {
+  background-color: var(--color-success-subtle);
+}
+.message.danger {
+  background-color: var(--color-danger-subtle);
+}
+
+/**
+ * Task list
+ */
+.tasklist {
+  list-style: none;
+  padding-left: 0;
+}
+@media (max-width: 767.98px) {
+  .tasklist {
+    margin-top: 3rem;
+    padding-bottom: 6.25rem;
+  }
+}
+@media (min-width: 768px) {
+  .tasklist {
+    margin-left: auto;
+    margin-right: auto;
+    max-width: 43.75rem;
+    padding-bottom: 8.125rem;
+  }
+}
+.tasklist li {
+  display: flex;
+}
+@media (min-width: 768px) {
+  .tasklist li {
+    margin-bottom: 1.5rem;
+    border: 0.125rem solid var(--color-border-subtle);
+    border-radius: 0.375rem;
+  }
+}
+.tasklist li:nth-of-type(odd) {
+  background-color: var(--color-neutral-subtle);
+}
+.tasklist li p {
+  flex: 1;
+  padding: 1rem;
+  font-size: 1.25rem;
+}
+.tasklist li .delete, .tasklist li .edit {
+  background-repeat: no-repeat;
+  background-position: center center;
+  cursor: pointer;
+  width: 3.125rem;
+  border-left: 0.125rem solid var(--color-border-subtle);
+  opacity: 0.5;
+}
+.tasklist li .delete:hover, .tasklist li .edit:hover {
+  opacity: 1;
+}
+.tasklist li .delete:active, .tasklist li .edit:active {
+  transform: translateY(0.125rem);
+}
+.tasklist  .delete {
+  background-image: url(../img/delete.png);
+}
+.tasklist .edit {
+  background-image: url(../img/edit.png);
+}
+
+/**
+ * Create task container
+ */
+@media (max-width: 767.98px) {
+  .create-task-container {
+    position: fixed;
+    bottom: 0;
+    z-index: 1;
+    width: 100%;
+    padding: 1rem;
+    background-color: var(--color-canvas-subtle);
+    -webkit-backdrop-filter: saturate(180%) blur(20px);
+            backdrop-filter: saturate(180%) blur(20px);
+  }
+}
+@media (min-width: 768px) {
+  .create-task-container {
+    margin: 8.125rem auto;
+    max-width: 21.25rem;
+  }
+}
+
+/**
+ * Forms
+ */
+ 
+
+form {
+  background-color: var(--color-attention-subtle);
+  border: 0.1875rem solid;
+  border-radius: 0.375rem;
+  padding: 1rem;
+}
+@media (max-width: 767.98px) {
+  form {
+    margin: 1rem;
+  }
+}
+form h2 {
+  text-align: center;
+  margin-bottom: 3rem;
+}
+form input[type=text] {
+  border: 0.1875rem solid;
+  border-radius: 0.375rem;
+  padding: 0.75rem 1rem;
+  font-size: 1.25rem;
+  width: 100%;
+  margin-bottom: 2rem;
+  transition: text-indent 300ms;
+}
+form input[type=text]:focus {
+  text-indent: 0.3125rem;
+}
+
+/**
+ * Modal
+ */
+.modal-dialog {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 10;
+  display: none;
+  align-items: center;
+  justify-content: center;
+}
+.modal-dialog.show {
+  display: flex;
+}
+@media (max-width: 767.98px) {
+  .modal-dialog form {
+    width: 100%;
+  }
+}
+@media (min-width: 768px) {
+  .modal-dialog form {
+    position: absolute;
+    transform: translate(50%, 20%);
+    width: 50%;
+  }
+}
+
+/**
+ * Utilities
+ */
+.screen-reader-only {
+  border: 0;
+  clip: rect(0 0 0 0);
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  padding: 0;
+  position: absolute;
+  width: 1px;
+}
