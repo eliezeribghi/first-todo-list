@@ -25,11 +25,11 @@ variable "ami_id" {
 variable "instance_type" {
   description = "EC2 instance type"
   type        = string
-  default     = "t2.small"
+  default     = "t2.small" # Change  to t2.smal +l 
 }
 
 variable "instance_count" {
   description = "Number of EC2 instances"
   type        = number
-  default     = 2
+  default     = 3
 }
