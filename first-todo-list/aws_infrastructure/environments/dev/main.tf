@@ -28,5 +28,5 @@ module "eks" {
   cluster_version = "1.29"
   subnet_ids         = [module.vpc.subnet_id]
   vpc_id          = module.vpc.vpc_id
-
+  # ...autres variables nécessaires
 }
