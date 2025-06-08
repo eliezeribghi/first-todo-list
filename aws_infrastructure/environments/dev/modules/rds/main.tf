@@ -14,17 +14,17 @@ resource "aws_db_instance" "rds" {
   multi_az             = false # Ne pas activer Multi-AZ pour la haute disponibilité
 
   tags = {
-    Name        = "${var.environment}-rds-v3"
-    Environment = var.environment
+    Name        = "${var.environment}-rds-v3" # Nom de l'instance RDS
+    Environment = var.environment  # Environnement pour le tagging
   }
 }
 
-resource "aws_db_subnet_group" "rds" {
-  name       = "${var.environment}-rds-subnet-group-v3"
-  subnet_ids = var.subnet_ids
+resource "aws_db_subnet_group" "rds" { # Crée un groupe de sous-réseaux pour RDS
+  name       = "${var.environment}-rds-subnet-group-v3" # Nom unique pour le groupe de sous-réseaux
+  subnet_ids = var.subnet_ids # Liste des IDs de sous-réseaux où RDS sera déployé
 
   tags = {
-    Name        = "${var.environment}-rds-subnet-group-v3"
-    Environment = var.environment
+    Name        = "${var.environment}-rds-subnet-group-v3" # Nom du groupe de sous-réseaux
+    Environment = var.environment # Environnement pour le tagging
   }
 }
