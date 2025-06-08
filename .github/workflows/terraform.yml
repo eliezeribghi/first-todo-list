@@ -4,7 +4,6 @@ on:
   push:
     branches: [master, test-argo]
     tags: ['v*.*.*']
-
   pull_request:
     branches: [master, test-argo]
 
@@ -12,29 +11,33 @@ jobs:
   terraform:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout   code
-        uses: actions/checkout@v3 # Récupère le code du dépôt
+      - name: Checkout code
+        uses: actions/checkout@v3
 
       - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v2 # Installe Terraform
+        uses: hashicorp/setup-terraform@v2
         with:
-          terraform_version: 1.5.0 # Version de Terraform
+          terraform_version: 1.5.0
 
       - name: Terraform Init
-        run: terraform init # Initialise le projet Terraform
+        run: terraform init
+        working-directory: ./aws_infrastructure/environments/dev/modules/rds
 
       - name: Terraform Validate
-        run: terraform validate # Valide la syntaxe des fichiers Terraform
+        run: terraform validate
+        working-directory: ./aws_infrastructure/environments/dev/modules/rds
 
       - name: Terraform Plan
-        run: terraform plan -out=tfplan # Génère un plan de déploiement
+        run: terraform plan -out=tfplan
+        working-directory: ./aws_infrastructure/environments/dev/modules/rds
         env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }} # Clé AWS pour l'authentification
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }} # Clé secrète AWS
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 
       - name: Terraform Apply
-        if: github.event_name == 'push' # Applique uniquement sur un push (pas sur PR)
-        run: terraform apply -auto-approve tfplan # Applique le plan Terraform
+        if: github.event_name == 'push'
+        run: terraform apply -auto-approve tfplan
+        working-directory: ./aws_infrastructure/environments/dev/modules/rds
         env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }} # Clé AWS pour l'authentification
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }} # Clé secrète AWS
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
