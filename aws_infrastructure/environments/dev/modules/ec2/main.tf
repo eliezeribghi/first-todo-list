@@ -1,9 +1,9 @@
 resource "aws_instance" "ec2" {
-  count                = var.instance_count
-  ami                  = var.ami_id
-  instance_type        = var.instance_type
-  subnet_id            = var.subnet_id
-  vpc_security_group_ids = [var.security_group_id]
+  count                = var.instance_count # Number of EC2 instances to create
+  ami                  = var.ami_id         # AMI ID for the EC2 instance
+  instance_type        = var.instance_type # Instance type (e.g., t2.micro, t2.medium)
+  subnet_id            = var.subnet_id # Subnet ID where the instance will be launched
+  vpc_security_group_ids = [var.security_group_id] # Security group ID to associate with the instance
   user_data = <<-EOF
               #!/bin/bash
               echo "Starting EC2 setup at $(date)" > /tmp/setup.log
