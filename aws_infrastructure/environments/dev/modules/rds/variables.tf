@@ -1,5 +1,5 @@
 variable "subnet_ids" {
-  description = "List of subnet IDs for RDS"
+  description = "List of subnet IDs for RDS" # This should include at least two subnets in different availability zones for high availability.
   type        = list(string)
 }
 
