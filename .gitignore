@@ -4,3 +4,4 @@ frontend/node_modules
 /argo/credentials/aws-credentials.yaml
 
 /argo/credentials/
+aws_infrastructure/environments/dev/.terraform/providers/registry.terraform.io/hashicorp/aws/5.98.0/darwin_arm64/terraform-provider-aws_v5.98.0_x5
