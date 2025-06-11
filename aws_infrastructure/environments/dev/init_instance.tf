@@ -86,6 +86,7 @@ resource "aws_instance" "init_instance" {
 
   tags = {
     Name = "init-instance"
+    ArgoCD = "test"
   }
 
   depends_on = [aws_db_instance.mysql_rds]
