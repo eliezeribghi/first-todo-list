@@ -1,7 +1,7 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: terraform-apply
+  name: terraform-infra-dev
   namespace: default
 spec:
   template:
