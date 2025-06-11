@@ -21,6 +21,25 @@ override.tf.json
 # Lock file (optionnel)
 .terraform.lock.hcl
 
+
+
+vockey2.yaml
+aws.pem
+dev-key.pem
+
+vockey2.pem
+aws.pem                         
+k8s-key.pem                                    
+ terraform.tfstate.backup
+dev-key.pem                                                     
+dev-key.pub                     
+new-k8s-key.pem                  
+ 
+*.pem
+
+aws.pem
+
+aws.pem
 aws.pemaws_infrastructure/aws-k8s-terraform/aws-credentials.yaml
 vockey2.yaml
 aws.pem
