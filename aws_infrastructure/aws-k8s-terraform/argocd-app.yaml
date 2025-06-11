@@ -8,7 +8,7 @@ spec:
   source:
     repoURL: https://github.com/eliezeribghi/first-todo-list.git
     targetRevision: terraform-argocd
-    path: aws_infrastructure/environments/dev
+    path: aws_infrastructure/aws-k8s-terraform
   destination:
     server: https://kubernetes.default.svc
     namespace: default

@@ -11,7 +11,7 @@ resource "tls_private_key" "k8s_key" {
 
 # Création d'une paire de clés AWS
 resource "aws_key_pair" "k8s_key" {
-  key_name   = "k8s-key"
+  key_name   = "new-k8s-key"
   public_key = tls_private_key.k8s_key.public_key_openssh
 }
 
