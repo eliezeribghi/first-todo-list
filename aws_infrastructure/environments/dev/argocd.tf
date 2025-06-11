@@ -1,6 +1,6 @@
 provider "helm" {
   kubernetes {
-    config_path = "~/.kube/config"  # Assurez-vous que c'est le bon chemin
+    config_path = "~/.kube/config"
   }
 }
 
@@ -12,8 +12,8 @@ resource "helm_release" "argocd" {
   create_namespace = true
   version    = "5.36.0"
 
-  set {
+  set_list {
     name  = "server.extraArgs"
-    value = "--insecure"
+    value = ["--insecure"]
   }
 }
