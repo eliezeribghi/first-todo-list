@@ -70,12 +70,25 @@ resource "aws_route_table_association" "public_subnet_association" {
 
 # Instance EC2 pour le frontend
 # Héberge l'application frontend, accessible publiquement
+resource "aws_eip" "frontend_eip" {
+  domain = "vpc"  # Remplace vpc = true
+  tags = {
+    Name = "frontend-eip"
+  }
+}
+
+resource "aws_eip_association" "frontend_eip_assoc" {
+  instance_id   = aws_instance.frontend_instance.id  # Corrige frontend -> frontend_instance
+  allocation_id = aws_eip.frontend_eip.id
+}
+
 resource "aws_instance" "frontend_instance" {
   ami                    = var.ami_id
   instance_type          = var.instance_type
   subnet_id              = aws_subnet.public_subnet[0].id
   vpc_security_group_ids = [aws_security_group.frontend_sg.id]
   key_name               = var.key_name
+  associate_public_ip_address = true
   tags = {
     Name = "frontend-instance"
   }
@@ -83,16 +96,30 @@ resource "aws_instance" "frontend_instance" {
 
 # Instance EC2 pour le backend
 # Héberge l'application backend, accessible publiquement
+resource "aws_eip" "backend_eip" {
+  domain = "vpc"  # Remplace vpc = true
+  tags = {
+    Name = "backend-eip"
+  }
+}
+
+resource "aws_eip_association" "backend_eip_assoc" {
+  instance_id   = aws_instance.backend_instance.id  # Corrige backend -> backend_instance
+  allocation_id = aws_eip.backend_eip.id
+}
+
 resource "aws_instance" "backend_instance" {
   ami                    = var.ami_id
   instance_type          = var.instance_type
   subnet_id              = aws_subnet.public_subnet[1].id
   vpc_security_group_ids = [aws_security_group.backend_sg.id]
   key_name               = var.key_name
+  associate_public_ip_address = true
   tags = {
     Name = "backend-instance"
   }
 }
+
 
 # Base de données RDS MySQL
 # Base de données relationnelle dans des sous-réseaux privés pour stocker les données

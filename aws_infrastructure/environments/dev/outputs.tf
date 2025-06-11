@@ -2,14 +2,14 @@
 # Permet d'accéder à l'URL du frontend
 output "frontend_public_ip" {
   description = "Adresse IP publique de l'instance frontend"
-  value       = aws_instance.frontend_instance.public_ip
+  value       = aws_eip.frontend_eip.public_ip
 }
 
 # Adresse publique de l'instance backend
 # Permet d'accéder à l'URL du backend
 output "backend_public_ip" {
   description = "Adresse IP publique de l'instance backend"
-  value       = aws_instance.backend_instance.public_ip
+  value       = aws_eip.backend_eip.public_ip
 }
 
 # Point de terminaison RDS
@@ -30,5 +30,5 @@ output "s3_bucket_name" {
 # Permet de se connecter via SSH pour exécuter le script d'initialisation
 output "init_instance_public_ip" {
   description = "Adresse IP publique de l'instance d'initialisation"
-  value       = aws_instance.init_instance.public_ip
+  value       = aws_eip.init_instance_eip.public_ip
 }
