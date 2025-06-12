@@ -4,3 +4,4 @@ frontend/node_modules
 /argo/credentials/aws-credentials.yaml
 
 /argo/credentials/
+*.pem

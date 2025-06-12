@@ -1,0 +1,59 @@
+---
+- name: Configurer une instance EC2 Ubuntu en exécutant un script shell
+  hosts: web
+  become: yes
+  tasks:
+    - name: Copier le script shell sur l'instance
+      copy:
+        src: ./ec2-user-data.sh
+        dest: /tmp/ec2-user-data.sh
+        mode: '0755'
+
+    - name: Exécuter le script shell
+      command: /tmp/ec2-user-data.sh
+      register: script_result
+      changed_when: script_result.rc == 0
+
+    - name: Afficher la sortie du script
+      debug:
+        msg: "{{ script_result.stdout_lines | default('Aucune sortie stdout') }}"
+
+    - name: Afficher les erreurs du script (si présentes)
+      debug:
+        msg: "{{ script_result.stderr_lines | default('Aucune erreur') }}"
+      when: script_result.stderr | default('') | length > 0
+
+    - name: Vérifier la version de nginx
+      command: nginx -v
+      register: nginx_version
+      changed_when: false
+      ignore_errors: true
+
+    - name: Vérifier la version de Python
+      command: python3 --version
+      register: python_version
+      changed_when: false
+      ignore_errors: true
+
+    - name: Afficher la version de nginx
+      debug:
+        msg: "{{ nginx_version.stderr | default('nginx non installé') }}"
+
+    - name: Afficher la version de Python
+      debug:
+        msg: "{{ python_version.stdout | default('Python non installé') }}"
+
+    - name: Vérifier l'existence du fichier de log
+      stat:
+        path: /home/ubuntu/install.log
+      register: log_file
+
+    - name: Afficher le contenu du fichier de log
+      command: cat /home/ubuntu/install.log
+      register: log_content
+      when: log_file.stat.exists
+
+    - name: Afficher le contenu du log
+      debug:
+        msg: "{{ log_content.stdout_lines | default('Fichier de log non trouvé') }}"
+      when: log_file.stat.exists
