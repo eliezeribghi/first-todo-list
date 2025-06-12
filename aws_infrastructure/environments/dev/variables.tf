@@ -115,3 +115,10 @@ variable "aws_secret_access_key" {
   type        = string
   sensitive   = true
 }
+# Clé privée SSH
+variable "ssh_private_key" {
+  description = "Clé privée SSH pour accéder aux instances EC2"
+  type        = string
+  sensitive   = true
+
+}

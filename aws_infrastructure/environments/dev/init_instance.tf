@@ -79,7 +79,7 @@ resource "aws_instance" "init_instance" {
     connection {
       type        = "ssh"
       user        = "ubuntu"
-      private_key = file("/Users/eliezeribghi/Desktop/first-todo-list/aws_infrastructure/environments/dev/new-k8s-key.pem")
+      private_key = var.ssh_private_key
       host        = self.public_ip
     }
   }
